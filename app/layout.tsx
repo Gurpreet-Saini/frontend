@@ -4,8 +4,8 @@ import { AuthProvider } from '@/lib/auth-context';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
-  title: 'Attendance Management System',
-  description: 'Center → Department → Sewadar attendance tracking',
+  title: 'Radha Soami Satsang Beas',
+  description: 'RSSB Attendance Management System',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

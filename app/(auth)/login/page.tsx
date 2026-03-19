@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { login as loginApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import toast from 'react-hot-toast';
-import { ShieldCheck, User, Lock, Loader2 } from 'lucide-react';
+import { User, Lock, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -32,12 +33,12 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full animate-fade-in">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-600 text-white shadow-xl shadow-primary-200 mb-4 transition-transform hover:scale-105">
-            <ShieldCheck size={32} />
+        <div className="text-center mb-8 flex flex-col items-center">
+          <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl overflow-hidden bg-[#7a0000] shadow-xl shadow-red-900/20 mb-6 transition-transform hover:scale-105">
+            <Image src="/logo.svg" alt="RSSB Logo" width={96} height={96} className="object-cover" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">AMS Portal</h1>
-          <p className="text-gray-500 mt-2">Attendance Management System</p>
+          <h1 className="text-3xl font-bold text-gray-900">Radha Soami Satsang Beas</h1>
+          <p className="text-[#7a0000] font-semibold tracking-wide uppercase text-sm mt-3">Attendance Management</p>
         </div>
 
         <div className="card p-8 shadow-xl shadow-gray-200/50">
