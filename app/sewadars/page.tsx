@@ -655,44 +655,42 @@ export default function SewadarsPage() {
         {/* Enhanced Modal Engine */}
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300 overflow-y-auto">
-            <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-2xl" onClick={() => setIsModalOpen(false)} />
-            
-            <div className="relative bg-white/95 backdrop-blur-xl rounded-[3rem] shadow-[0_64px_256px_-64px_rgba(0,0,0,0.3)] w-full max-w-xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 pb-6">
+            <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-2xl" onClick={() => setIsModalOpen(false)} />            <div className={`relative bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-[0_64px_256px_-64px_rgba(0,0,0,0.3)] w-full overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 pb-6 ${modalType === 'transfer' ? 'max-w-lg' : 'max-w-xl'}`}>
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-indigo-600 to-indigo-900 p-8 text-white relative overflow-hidden">
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <div className="bg-gradient-to-r from-indigo-600 to-indigo-900 p-5 text-white relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                  <div className="relative z-10 flex justify-between items-center">
                     <div>
-                       <p className="text-[8px] font-black uppercase tracking-[0.4em] text-indigo-200 mb-1">Management System</p>
-                       <h3 className="text-2xl font-black tracking-tight">
+                       <p className="text-[7px] font-black uppercase tracking-[0.4em] text-indigo-200 mb-1">RSSB Management</p>
+                       <h3 className="text-lg font-black tracking-tight uppercase">
                          {modalType === 'add' && 'Add Sewadar'}
                          {modalType === 'edit' && 'Update Sewadar'}
                          {modalType === 'transfer' && 'Transfer Sewadar'}
                          {modalType === 'upload' && 'Import Excel Data'}
                        </h3>
                     </div>
-                    <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all active:scale-90">
-                       <X size={20} />
+                    <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-all active:scale-90">
+                       <X size={18} />
                     </button>
                  </div>
               </div>
 
-              <div className="p-8">
+              <div className="p-5">
                 {modalType === 'upload' ? (
-                  <div className="space-y-8">
+                  <div className="space-y-6">
                     {/* Center Selection for Super Admin */}
                     {isSuperAdmin && (
-                      <div className="bg-gray-50 rounded-[2rem] p-8 border border-gray-100 space-y-4">
-                         <div className="flex items-center gap-3 mb-2">
-                           <div className="p-2 bg-indigo-100 rounded-xl text-indigo-600">
-                             <Building2 size={18} />
+                      <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-4">
+                         <div className="flex items-center gap-3">
+                           <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                             <Building2 size={16} />
                            </div>
-                           <p className="text-xs font-black text-gray-900 uppercase tracking-widest">
-                             Select Target Center
+                           <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest">
+                             Target Center
                            </p>
                          </div>
                          <select
-                           className="w-full h-16 bg-white border-2 border-gray-100 focus:border-indigo-600 rounded-2xl px-6 text-gray-900 font-extrabold transition-all outline-none"
+                           className="w-full h-11 bg-white border-2 border-gray-100 focus:border-indigo-600 rounded-xl px-4 text-gray-900 font-bold transition-all outline-none text-sm"
                            value={uploadCenterId}
                            onChange={(e) => setUploadCenterId(e.target.value)}
                            required
@@ -702,118 +700,94 @@ export default function SewadarsPage() {
                              <option key={c.id} value={c.id}>{c.name}</option>
                            ))}
                          </select>
-                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
-                           * All records in the file will be assigned to this center
-                         </p>
                       </div>
                     )}
 
-                    <div className="flex flex-col items-center py-12 bg-white rounded-[3rem] border-4 border-dashed border-gray-100 hover:border-indigo-200 transition-colors relative group overflow-hidden">
+                    <div className="flex flex-col items-center py-8 bg-white rounded-3xl border-4 border-dashed border-gray-100 hover:border-indigo-200 transition-colors relative group overflow-hidden">
                       <div className="absolute inset-0 bg-indigo-50/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="w-24 h-24 rounded-[2.5rem] bg-indigo-100 flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform shadow-inner relative z-10">
-                        <Upload size={40} />
+                      <div className="w-20 h-20 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-600 mb-4 group-hover:scale-110 transition-transform relative z-10">
+                        <Upload size={32} />
                       </div>
-                      <label className="cursor-pointer relative z-10">
-                        <span className="text-2xl font-black text-gray-900 block mb-2">Upload Sewadar Records</span>
-                        <span className="text-indigo-600 font-bold hover:underline">Select Excel File (.xlsx)</span>
-                        <input 
-                          type="file" 
-                          className="hidden" 
-                          accept=".xlsx" 
-                          onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                        />
+                      <label className="cursor-pointer relative z-10 text-center">
+                        <span className="text-xl font-black text-gray-900 block mb-1">Upload Excel Records</span>
+                        <span className="text-indigo-600 font-bold hover:underline text-sm">Browse Files</span>
+                        <input type="file" className="hidden" accept=".xlsx" onChange={(e) => setUploadFile(e.target.files?.[0] || null)} />
                       </label>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-6 bg-white px-6 py-2 rounded-full border border-gray-100 shadow-sm relative z-10">Standard Excel Format</p>
                       
                       {uploadFile && (
-                        <div className="mt-8 p-5 bg-indigo-600 text-white rounded-3xl flex items-center gap-4 animate-in slide-in-from-bottom-4 shadow-2xl relative z-20">
-                          <CheckCircle2 size={24} />
+                        <div className="mt-6 p-4 bg-indigo-600 text-white rounded-2xl flex items-center gap-3 animate-in slide-in-from-bottom-2 shadow-xl relative z-20">
+                          <CheckCircle2 size={20} />
                           <div className="text-left">
-                             <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200">File Selected</p>
-                             <p className="text-lg font-black">{uploadFile.name}</p>
+                             <p className="text-[8px] font-black uppercase tracking-widest text-indigo-200 line-clamp-1">{uploadFile.name}</p>
                           </div>
                         </div>
                       )}
                     </div>
 
                     <div className="flex flex-col md:flex-row gap-4">
-                       <div className="flex-1 bg-gray-50 rounded-[2rem] p-8 border border-gray-100">
-                          <p className="text-xs font-black text-gray-900 uppercase tracking-widest mb-6 flex items-center gap-2">
+                       <div className="flex-1 bg-gray-50 rounded-2xl p-5 border border-gray-100">
+                          <p className="text-[10px] font-black text-gray-900 uppercase tracking-widest mb-4 flex items-center gap-2">
                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                              Format Instructions
                           </p>
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse">
-                              <thead>
-                                <tr className="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-200">
-                                  <th className="pb-2 pr-4">Col</th>
-                                  <th className="pb-2 pr-4">Field</th>
-                                  <th className="pb-2">Status</th>
-                                </tr>
-                              </thead>
-                              <tbody className="text-[10px] font-bold text-gray-600">
-                                <tr className="border-b border-gray-100/50"><td className="py-2">A</td><td className="py-2">Sewadar ID</td><td className="py-2 text-red-500">Required</td></tr>
-                                <tr className="border-b border-gray-100/50"><td className="py-2">B</td><td className="py-2">Full Name</td><td className="py-2 text-red-500">Required</td></tr>
-                                <tr className="border-b border-gray-100/50"><td className="py-2">C</td><td className="py-2">Parent/Spouse</td><td className="py-2 text-red-500">Required</td></tr>
-                                <tr className="border-b border-gray-100/50"><td className="py-2">D</td><td className="py-2">Gender</td><td className="py-2 text-red-500">Required</td></tr>
-                                <tr><td className="py-2">E</td><td className="py-2">Badge Status</td><td className="py-2 text-red-500">Required</td></tr>
-                              </tbody>
-                            </table>
+                          <div className="space-y-2 text-[10px] font-bold text-gray-500">
+                            <div className="flex justify-between border-b pb-1 font-black text-[8px] text-gray-400"><span>Column</span><span>Field</span></div>
+                            <div className="flex justify-between"><span>Col A</span><span className="text-indigo-600">Sewadar ID</span></div>
+                            <div className="flex justify-between"><span>Col B</span><span className="text-indigo-600">Full Name</span></div>
+                            <div className="flex justify-between"><span>Col C</span><span className="text-indigo-600">Parent/Spouse</span></div>
                           </div>
                        </div>
-                       <button onClick={handleBulkUpload} disabled={!uploadFile || loading} className="h-24 md:w-64 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-200 text-white rounded-[2.5rem] flex flex-col items-center justify-center gap-1 shadow-2xl shadow-indigo-100 transition-all hover:-translate-y-2 active:scale-95">
-                          {loading ? (
-                             <Loader2 className="animate-spin" size={32} />
-                          ) : (
+                       <button onClick={handleBulkUpload} disabled={!uploadFile || loading} className="h-20 md:w-48 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-200 text-white rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg transition-all active:scale-95">
+                          {loading ? <Loader2 className="animate-spin" size={24} /> : (
                              <>
-                               <p className="text-2xl font-black tracking-tighter">Upload File</p>
-                               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">Save to System</p>
+                               <p className="text-lg font-black tracking-tight">Process File</p>
+                               <p className="text-[8px] font-black uppercase tracking-widest opacity-60">Save to System</p>
                              </>
                           )}
                        </button>
                     </div>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmit} className="space-y-8">
+                  <form onSubmit={handleSubmit} className="space-y-4">
                     {(modalType === 'add' || modalType === 'edit') && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                         <div className="space-y-8">
-                            <div className="space-y-3 px-4">
-                               <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Full Name</label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-4">
+                         <div className="space-y-4">
+                            <div className="space-y-1.5 px-1">
+                               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
                                <div className="relative group">
-                                  <User className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
+                                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={16} />
                                   <input
                                     type="text"
-                                    className="w-full h-16 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-3xl pl-16 pr-6 text-gray-900 font-extrabold transition-all shadow-inner outline-none"
+                                    className="w-full h-11 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-xl pl-10 pr-4 text-gray-900 font-bold transition-all shadow-inner outline-none text-sm"
                                     value={formData.name || ''}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    placeholder="Enter full name..."
+                                    placeholder="Enter name"
                                     required
                                   />
                                </div>
                             </div>
 
-                            <div className="space-y-3 px-4">
-                               <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Sewadar ID</label>
+                            <div className="space-y-1.5 px-1">
+                               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Sewadar ID</label>
                                <div className="relative group">
-                                  <Shield className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" size={20} />
+                                  <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" size={16} />
                                   <input
                                     type="text"
-                                    className="w-full h-16 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-3xl pl-16 pr-6 text-gray-900 font-black tracking-widest uppercase transition-all shadow-inner outline-none"
+                                    className="w-full h-11 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-xl pl-10 pr-4 text-gray-900 font-bold uppercase transition-all shadow-inner outline-none text-sm tracking-tight"
                                     value={formData.sewadar_id}
                                     onChange={(e) => setFormData({ ...formData, sewadar_id: e.target.value.toUpperCase() })}
-                                    placeholder="REG-0000X"
+                                    placeholder="ID-0000X"
                                     required
                                   />
                                </div>
                             </div>
 
-                            <div className="space-y-3 px-4">
-                               <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Department</label>
+                            <div className="space-y-1.5 px-1">
+                               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Department</label>
                                <div className="relative group">
-                                  <LayoutGrid className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" size={20} />
+                                  <LayoutGrid className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" size={16} />
                                   <select
-                                    className="w-full h-16 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-3xl pl-16 pr-8 text-gray-900 font-bold appearance-none transition-all shadow-inner outline-none cursor-pointer"
+                                    className="w-full h-11 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-xl pl-10 pr-6 text-gray-900 font-bold appearance-none transition-all shadow-inner outline-none cursor-pointer text-sm"
                                     value={formData.department_id}
                                     onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
                                   >
@@ -826,41 +800,42 @@ export default function SewadarsPage() {
                             </div>
                          </div>
 
-                         <div className="space-y-8">
-                            <div className="space-y-3 px-4">
-                               <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Parent/Spouse Name</label>
+                         <div className="space-y-4">
+                            <div className="space-y-1.5 px-1">
+                               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Parent/Spouse</label>
                                <div className="relative group">
-                                  <UserCheck size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" />
+                                  <UserCheck size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" />
                                   <input
                                     type="text"
-                                    className="w-full h-16 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-3xl pl-16 pr-6 text-gray-900 font-extrabold transition-all shadow-inner outline-none"
+                                    className="w-full h-11 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-xl pl-10 pr-4 text-gray-900 font-bold transition-all shadow-inner outline-none text-sm"
                                     value={formData.parent_spouse_name}
                                     onChange={(e) => setFormData({ ...formData, parent_spouse_name: e.target.value })}
-                                    placeholder="Enter parent/spouse name..."
+                                    placeholder="Enter parent/spouse"
                                     required
                                   />
                                </div>
                             </div>
 
-                            <div className="space-y-3 px-4">
-                               <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Phone Number</label>
+                            <div className="space-y-1.5 px-1">
+                               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
                                <div className="relative group">
-                                  <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" size={20} />
+                                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" size={16} />
                                   <input
                                     type="text"
-                                    className="w-full h-16 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-3xl pl-16 pr-6 text-gray-900 font-black tracking-tighter transition-all shadow-inner outline-none"
+                                    className="w-full h-11 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-xl pl-10 pr-4 text-gray-900 font-bold transition-all shadow-inner outline-none text-sm"
                                     value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                     placeholder="+91-0000000000"
+                                    required
                                   />
                                </div>
                             </div>
 
-                            <div className="flex gap-4 px-4">
-                               <div className="flex-1 space-y-3">
-                                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Status</label>
-                                    <select
-                                    className="w-full h-16 bg-indigo-50 border-2 border-indigo-100 focus:border-indigo-600 focus:bg-white rounded-3xl px-6 text-indigo-700 font-black appearance-none transition-all outline-none cursor-pointer"
+                            <div className="grid grid-cols-2 gap-3 px-1">
+                               <div className="space-y-1.5">
+                                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Status</label>
+                                  <select
+                                    className="w-full h-11 bg-indigo-50 border-2 border-indigo-100 focus:border-indigo-600 focus:bg-white rounded-xl px-3 text-indigo-700 font-bold appearance-none transition-all outline-none cursor-pointer text-[12px] shadow-inner"
                                     value={formData.badge_status}
                                     onChange={(e) => setFormData({ ...formData, badge_status: e.target.value })}
                                     required
@@ -870,10 +845,10 @@ export default function SewadarsPage() {
                                     <option value="Elderly">Elderly</option>
                                   </select>
                                </div>
-                               <div className="flex-1 space-y-3">
-                                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Gender</label>
-                                    <select
-                                    className="w-full h-16 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-3xl px-6 text-gray-700 font-black appearance-none transition-all outline-none cursor-pointer"
+                               <div className="space-y-1.5">
+                                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Gender</label>
+                                  <select
+                                    className="w-full h-11 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-xl px-3 text-gray-700 font-bold appearance-none transition-all outline-none cursor-pointer text-[12px] shadow-inner"
                                     value={formData.gender}
                                     onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
                                     required
@@ -884,49 +859,52 @@ export default function SewadarsPage() {
                                   </select>
                                </div>
                             </div>
-
-                            {isSuperAdmin && (
-                              <div className="space-y-3 px-4 transition-all animate-in slide-in-from-top-4 duration-500">
-                                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Center</label>
-                                 <div className="relative group">
-                                    <Building2 className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" size={20} />
-                                    <select
-                                      className="w-full h-16 bg-gray-900 text-white border-2 border-transparent focus:border-indigo-400 rounded-3xl pl-16 pr-8 text-lg font-black appearance-none transition-all shadow-2xl outline-none cursor-pointer"
-                                      value={formData.center_id}
-                                      onChange={(e) => setFormData({ ...formData, center_id: e.target.value })}
-                                      required
-                                    >
-                                      <option value="">Select Center...</option>
-                                      {centers.map((c) => (
-                                        <option key={c.id} value={c.id}>{c.name}</option>
-                                      ))}
-                                    </select>
-                                 </div>
-                              </div>
-                            )}
                          </div>
+
+                         {isSuperAdmin && (
+                            <div className="md:col-span-2 space-y-1.5 px-1 animate-in slide-in-from-top-2 duration-500">
+                               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Center Assignment</label>
+                               <div className="relative group">
+                                  <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" size={16} />
+                                  <select
+                                    className="w-full h-11 bg-gray-900 text-white border-2 border-transparent focus:border-indigo-400 rounded-xl pl-10 pr-6 text-sm font-bold appearance-none transition-all shadow-xl outline-none cursor-pointer"
+                                    value={formData.center_id}
+                                    onChange={(e) => setFormData({ ...formData, center_id: e.target.value })}
+                                    required
+                                  >
+                                    <option value="">Select Center...</option>
+                                    {centers.map((c) => (
+                                      <option key={c.id} value={c.id}>{c.name}</option>
+                                    ))}
+                                  </select>
+                               </div>
+                            </div>
+                         )}
                       </div>
                     )}
 
                     {modalType === 'transfer' && (
-                      <div className="space-y-10 py-4 px-4 animate-in fade-in zoom-in-95 duration-500">
-                        <div className="p-10 bg-gradient-to-br from-indigo-50 via-white to-gray-50 rounded-[3.5rem] border-2 border-indigo-100 flex flex-col items-center text-center gap-6 shadow-xl">
-                          <div className="w-24 h-24 rounded-[2.5rem] bg-indigo-600 text-white flex items-center justify-center shadow-2xl shadow-indigo-200 animate-bounce">
-                             <MoveHorizontal size={40} />
-                          </div>
-                          <div>
-                            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-2">Transferring Sewadar</p>
-                            <h4 className="text-3xl font-black text-gray-900 tracking-tighter uppercase">{currentSewadar?.name}</h4>
-                            <p className="text-gray-400 font-bold mt-2">Current Department: <span className="text-indigo-600 px-3 py-1 bg-indigo-50 rounded-lg ml-1">{currentSewadar?.department?.name}</span></p>
-                          </div>
+                      <div className="space-y-6 py-2 px-1 animate-in fade-in zoom-in-95 duration-500">
+                        <div className="p-6 bg-gradient-to-br from-indigo-50 via-white to-gray-50 rounded-3xl border-2 border-indigo-100 flex items-center gap-5 shadow-sm">
+                           <div className="w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-100 flex-shrink-0">
+                              <MoveHorizontal size={28} />
+                           </div>
+                           <div className="flex-1 min-w-0">
+                             <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-0.5">Transferring Sewadar</p>
+                             <h4 className="text-xl font-black text-gray-900 truncate uppercase tracking-tight">{currentSewadar?.name}</h4>
+                             <div className="mt-1 flex items-center gap-2">
+                               <span className="text-[10px] font-bold text-gray-400 uppercase">From:</span>
+                               <span className="text-[11px] font-black text-indigo-700 px-2 py-0.5 bg-indigo-50 rounded-md border border-indigo-100">{currentSewadar?.department?.name}</span>
+                             </div>
+                           </div>
                         </div>
 
-                        <div className="space-y-4 max-w-md mx-auto">
-                           <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em] text-center block w-full">New Department</label>
+                        <div className="space-y-2">
+                           <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">New Target Department</label>
                            <div className="relative group">
-                              <LayoutGrid className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600" size={24} />
+                              <LayoutGrid className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600" size={18} />
                               <select
-                                className="w-full h-20 bg-white border-[3px] border-gray-100 focus:border-indigo-600 rounded-[2.5rem] pl-16 pr-10 text-xl font-black appearance-none transition-all shadow-xl outline-none cursor-pointer"
+                                className="w-full h-12 bg-white border-2 border-gray-100 focus:border-indigo-600 rounded-xl pl-11 pr-8 text-sm font-bold appearance-none transition-all shadow-sm outline-none cursor-pointer"
                                 value={newDeptId}
                                 onChange={(e) => setNewDeptId(e.target.value)}
                                 required
@@ -941,9 +919,9 @@ export default function SewadarsPage() {
                       </div>
                     )}
 
-                    <div className="flex flex-col md:flex-row gap-3 pt-6 border-t border-gray-100">
-                      <button type="button" onClick={() => setIsModalOpen(false)} className="h-12 flex-1 bg-white hover:bg-gray-50 border border-gray-200 text-gray-400 font-black uppercase tracking-widest text-[10px] rounded-xl transition-all hover:text-gray-900">Cancel</button>
-                      <button type="submit" className="h-12 flex-[2] bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm uppercase tracking-widest rounded-xl shadow-lg shadow-indigo-100 transition-all hover:-translate-y-0.5 active:scale-95">
+                    <div className="flex flex-col md:flex-row gap-3 pt-4 border-t border-gray-100">
+                      <button type="button" onClick={() => setIsModalOpen(false)} className="h-11 flex-1 bg-white hover:bg-gray-50 border border-gray-200 text-gray-400 font-black uppercase tracking-widest text-[10px] rounded-xl transition-all hover:text-gray-900">Cancel</button>
+                      <button type="submit" className="h-11 flex-[2] bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm uppercase tracking-widest rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:scale-95">
                         {modalType === 'add' ? 'Add Sewadar' : modalType === 'edit' ? 'Save Changes' : 'Transfer Sewadar'}
                       </button>
                     </div>

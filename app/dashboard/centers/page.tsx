@@ -269,50 +269,59 @@ export default function CentersPage() {
 
         {/* Center Details Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-gray-900/40 backdrop-blur-xl animate-in fade-in duration-500">
-            <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-[0_64px_256px_-64px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-500 border-2 border-white">
-              <div className="relative h-24 bg-gray-900 flex flex-col justify-center px-10">
-                 <div className="absolute right-0 top-0 w-48 h-48 bg-indigo-600/30 rounded-full translate-x-12 -translate-y-12 blur-3xl" />
-                 <p className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-1">Center Details</p>
-                 <h3 className="font-black text-xl text-white tracking-widest uppercase">{editingId ? 'Edit Center' : 'Create Center'}</h3>
-                 <button 
-                   onClick={() => setIsModalOpen(false)} 
-                   className="absolute right-8 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-all bg-white/5 hover:bg-white/10 p-2.5 rounded-xl"
-                 >
-                   <X size={20} />
-                 </button>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+            <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-xl" onClick={() => setIsModalOpen(false)} />
+            <div className="relative bg-white rounded-[2.5rem] w-full max-w-xl shadow-[0_64px_256px_-64px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-500">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-gray-900 to-indigo-950 p-6 text-white relative overflow-hidden">
+                 <div className="absolute right-0 top-0 w-48 h-48 bg-indigo-600/20 rounded-full translate-x-12 -translate-y-12 blur-3xl" />
+                 <div className="relative z-10 flex justify-between items-center">
+                    <div>
+                       <p className="text-[7px] font-black uppercase tracking-[0.4em] text-indigo-300 mb-1">Administrative Unit</p>
+                       <h3 className="text-xl font-black tracking-tight uppercase">{editingId ? 'Update Center Details' : 'Register New Center'}</h3>
+                    </div>
+                    <button onClick={() => setIsModalOpen(false)} className="w-8 h-8 bg-white/10 hover:bg-white/20 rounded-lg flex items-center justify-center transition-all active:scale-90">
+                       <X size={18} />
+                    </button>
+                 </div>
               </div>
               
-              <form onSubmit={handleSubmit} className="p-8 space-y-6">
+              <form onSubmit={handleSubmit} className="p-6 space-y-4">
                 <div className="space-y-4">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">Center Name</label>
-                    <input 
-                      required 
-                      autoFocus
-                      type="text" 
-                      className="w-full px-5 py-3 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-xl outline-none transition-all font-bold text-gray-900 placeholder:text-gray-200 text-sm shadow-inner" 
-                      placeholder="e.g. RSSB Center"
-                      value={formData.name} 
-                      onChange={e => setFormData({...formData, name: e.target.value})} 
-                    />
+                  <div className="space-y-1.5 px-1">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Center Name</label>
+                    <div className="relative group">
+                       <Building className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600" size={16} />
+                       <input 
+                         required 
+                         autoFocus
+                         type="text" 
+                         className="w-full h-11 pl-10 pr-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-xl outline-none transition-all font-bold text-gray-900 placeholder:text-gray-300 text-sm shadow-inner" 
+                         placeholder="e.g. RSSB Delhi Center"
+                         value={formData.name} 
+                         onChange={e => setFormData({...formData, name: e.target.value})} 
+                       />
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">Location</label>
-                    <input 
-                      required 
-                      type="text" 
-                      className="w-full px-5 py-3 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-xl outline-none transition-all font-bold text-gray-900 placeholder:text-gray-200 text-sm shadow-inner" 
-                      placeholder="e.g. Location"
-                      value={formData.location} 
-                      onChange={e => setFormData({...formData, location: e.target.value})} 
-                    />
+                  <div className="space-y-1.5 px-1">
+                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Location Address</label>
+                    <div className="relative group">
+                       <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600" size={16} />
+                       <input 
+                         required 
+                         type="text" 
+                         className="w-full h-11 pl-10 pr-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-xl outline-none transition-all font-bold text-gray-900 placeholder:text-gray-300 text-sm shadow-inner" 
+                         placeholder="Enter full address"
+                         value={formData.location} 
+                         onChange={e => setFormData({...formData, location: e.target.value})} 
+                       />
+                    </div>
                   </div>
                 </div>
 
                 <div className="pt-4 flex gap-3">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:bg-gray-50 rounded-xl transition-all">Cancel</button>
-                  <button type="submit" className="flex-[2] py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-xl shadow-lg shadow-indigo-100 transition-all active:scale-[0.98]">Save Center</button>
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="h-11 flex-1 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:bg-gray-50 rounded-xl transition-all border border-gray-100">Cancel</button>
+                  <button type="submit" className="h-11 flex-[2] bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg transition-all active:scale-95">{editingId ? 'Save Changes' : 'Create Center'}</button>
                 </div>
               </form>
             </div>
