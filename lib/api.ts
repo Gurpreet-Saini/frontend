@@ -26,7 +26,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401 && typeof window !== 'undefined') {
+    // Skip automatic redirect to /login if the request itself was a login attempt
+    if (err.response?.status === 401 && !err.config?.url?.includes('/auth/login') && typeof window !== 'undefined') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';

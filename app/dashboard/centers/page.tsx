@@ -234,14 +234,16 @@ export default function CentersPage() {
                     ))}
                     {filteredCenters.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="py-48 text-center flex flex-col items-center justify-center gap-8 relative overflow-hidden">
-                           <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/20 to-transparent pointer-events-none" />
-                           <div className="w-32 h-32 bg-gray-50 rounded-[3rem] flex items-center justify-center text-gray-100 border-4 border-white shadow-2xl relative z-10">
-                              <Search size={64} />
-                           </div>
-                           <div className="space-y-2 relative z-10">
-                             <p className="text-2xl font-black text-gray-400 capitalize tracking-tight">No Centers Found</p>
-                               <p className="text-gray-300 text-sm italic font-medium max-w-xs mx-auto">No centers match your current search.</p>
+                        <td colSpan={4} className="py-48 text-center">
+                           <div className="flex flex-col items-center justify-center gap-8 relative overflow-hidden">
+                             <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/20 to-transparent pointer-events-none" />
+                             <div className="w-32 h-32 bg-gray-50 rounded-[3rem] flex items-center justify-center text-gray-100 border-4 border-white shadow-2xl relative z-10">
+                                <Search size={64} />
+                             </div>
+                             <div className="space-y-2 relative z-10 text-center">
+                               <p className="text-2xl font-black text-gray-400 capitalize tracking-tight">No Centers Found</p>
+                                 <p className="text-gray-300 text-sm italic font-medium max-w-xs mx-auto">No centers match your current search.</p>
+                             </div>
                            </div>
                         </td>
                       </tr>
@@ -267,40 +269,40 @@ export default function CentersPage() {
 
         {/* Center Details Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-gray-900/80 backdrop-blur-xl animate-in fade-in duration-500">
-            <div className="bg-white rounded-[3.5rem] w-full max-w-xl shadow-[0_64px_256px_-64px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-500 border-4 border-white">
-              <div className="relative h-40 bg-gray-900 flex flex-col justify-center px-12">
-                 <div className="absolute right-0 top-0 w-64 h-64 bg-indigo-600/30 rounded-full translate-x-24 -translate-y-24 blur-3xl" />
-                 <p className="text-xs font-black text-indigo-400 uppercase tracking-[0.4em] mb-2">Center Details</p>
-                 <h3 className="font-black text-4xl text-white tracking-widest uppercase">{editingId ? 'Edit Center' : 'Create Center'}</h3>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-gray-900/40 backdrop-blur-xl animate-in fade-in duration-500">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-[0_64px_256px_-64px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-500 border-2 border-white">
+              <div className="relative h-24 bg-gray-900 flex flex-col justify-center px-10">
+                 <div className="absolute right-0 top-0 w-48 h-48 bg-indigo-600/30 rounded-full translate-x-12 -translate-y-12 blur-3xl" />
+                 <p className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-1">Center Details</p>
+                 <h3 className="font-black text-xl text-white tracking-widest uppercase">{editingId ? 'Edit Center' : 'Create Center'}</h3>
                  <button 
                    onClick={() => setIsModalOpen(false)} 
-                   className="absolute right-10 top-10 text-white/30 hover:text-white transition-all bg-white/5 hover:bg-white/10 p-3 rounded-2xl"
+                   className="absolute right-8 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-all bg-white/5 hover:bg-white/10 p-2.5 rounded-xl"
                  >
-                   <X size={24} />
+                   <X size={20} />
                  </button>
               </div>
               
-              <form onSubmit={handleSubmit} className="p-12 space-y-10">
-                <div className="space-y-8">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">Center Name</label>
+              <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">Center Name</label>
                     <input 
                       required 
                       autoFocus
                       type="text" 
-                      className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-black text-gray-900 placeholder:text-gray-200 text-lg shadow-inner" 
+                      className="w-full px-5 py-3 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-xl outline-none transition-all font-bold text-gray-900 placeholder:text-gray-200 text-sm shadow-inner" 
                       placeholder="e.g. RSSB Center"
                       value={formData.name} 
                       onChange={e => setFormData({...formData, name: e.target.value})} 
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">Location</label>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">Location</label>
                     <input 
                       required 
                       type="text" 
-                      className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-black text-gray-900 placeholder:text-gray-200 text-lg shadow-inner" 
+                      className="w-full px-5 py-3 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-xl outline-none transition-all font-bold text-gray-900 placeholder:text-gray-200 text-sm shadow-inner" 
                       placeholder="e.g. Location"
                       value={formData.location} 
                       onChange={e => setFormData({...formData, location: e.target.value})} 
@@ -308,9 +310,9 @@ export default function CentersPage() {
                   </div>
                 </div>
 
-                <div className="pt-6 flex gap-4">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-5 text-xs font-black text-gray-400 uppercase tracking-widest hover:bg-gray-50 rounded-2xl transition-all">Cancel</button>
-                  <button type="submit" className="flex-[2] py-5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-[0.3em] rounded-2xl shadow-2xl shadow-indigo-100 transition-all active:scale-[0.98]">Save Center</button>
+                <div className="pt-4 flex gap-3">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:bg-gray-50 rounded-xl transition-all">Cancel</button>
+                  <button type="submit" className="flex-[2] py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-xl shadow-lg shadow-indigo-100 transition-all active:scale-[0.98]">Save Center</button>
                 </div>
               </form>
             </div>

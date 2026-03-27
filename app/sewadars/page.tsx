@@ -657,27 +657,27 @@ export default function SewadarsPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300 overflow-y-auto">
             <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-2xl" onClick={() => setIsModalOpen(false)} />
             
-            <div className="relative bg-white/95 backdrop-blur-xl rounded-[4rem] shadow-[0_64px_256px_-64px_rgba(0,0,0,0.3)] w-full max-w-3xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 pb-8">
+            <div className="relative bg-white/95 backdrop-blur-xl rounded-[3rem] shadow-[0_64px_256px_-64px_rgba(0,0,0,0.3)] w-full max-w-xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 pb-6">
               {/* Modal Header */}
-              <div className="bg-gradient-to-r from-indigo-600 to-indigo-900 p-12 text-white relative overflow-hidden">
-                 <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <div className="bg-gradient-to-r from-indigo-600 to-indigo-900 p-8 text-white relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                  <div className="relative z-10 flex justify-between items-center">
                     <div>
-                       <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-200 mb-2">Management System</p>
-                       <h3 className="text-4xl font-black tracking-tight">
+                       <p className="text-[8px] font-black uppercase tracking-[0.4em] text-indigo-200 mb-1">Management System</p>
+                       <h3 className="text-2xl font-black tracking-tight">
                          {modalType === 'add' && 'Add Sewadar'}
                          {modalType === 'edit' && 'Update Sewadar'}
                          {modalType === 'transfer' && 'Transfer Sewadar'}
                          {modalType === 'upload' && 'Import Excel Data'}
                        </h3>
                     </div>
-                    <button onClick={() => setIsModalOpen(false)} className="w-16 h-16 bg-white/10 hover:bg-white/20 rounded-[2rem] flex items-center justify-center transition-all active:scale-90">
-                       <X size={32} />
+                    <button onClick={() => setIsModalOpen(false)} className="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-xl flex items-center justify-center transition-all active:scale-90">
+                       <X size={20} />
                     </button>
                  </div>
               </div>
 
-              <div className="p-12">
+              <div className="p-8">
                 {modalType === 'upload' ? (
                   <div className="space-y-8">
                     {/* Center Selection for Super Admin */}
@@ -941,9 +941,9 @@ export default function SewadarsPage() {
                       </div>
                     )}
 
-                    <div className="flex flex-col md:flex-row gap-4 pt-10 border-t-2 border-gray-100 px-4">
-                      <button type="button" onClick={() => setIsModalOpen(false)} className="h-20 flex-1 bg-white hover:bg-gray-50 border-2 border-gray-100 text-gray-400 font-black uppercase tracking-widest rounded-[2rem] transition-all hover:text-gray-900">Cancel</button>
-                      <button type="submit" className="h-20 flex-[2] bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xl uppercase tracking-tighter rounded-[2.5rem] shadow-2xl shadow-indigo-100 transition-all hover:-translate-y-1 active:scale-95">
+                    <div className="flex flex-col md:flex-row gap-3 pt-6 border-t border-gray-100">
+                      <button type="button" onClick={() => setIsModalOpen(false)} className="h-12 flex-1 bg-white hover:bg-gray-50 border border-gray-200 text-gray-400 font-black uppercase tracking-widest text-[10px] rounded-xl transition-all hover:text-gray-900">Cancel</button>
+                      <button type="submit" className="h-12 flex-[2] bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm uppercase tracking-widest rounded-xl shadow-lg shadow-indigo-100 transition-all hover:-translate-y-0.5 active:scale-95">
                         {modalType === 'add' ? 'Add Sewadar' : modalType === 'edit' ? 'Save Changes' : 'Transfer Sewadar'}
                       </button>
                     </div>
@@ -958,16 +958,16 @@ export default function SewadarsPage() {
         {deleteSewadarId !== null && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
             <div className="fixed inset-0 bg-gray-900/80 backdrop-blur-3xl" onClick={() => setDeleteSewadarId(null)} />
-            <div className="relative bg-white rounded-[4rem] p-16 text-center max-w-lg shadow-[0_64px_256px_-64px_rgba(220,38,38,0.4)] animate-in zoom-in-95 duration-500 overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-2 bg-red-600" />
-              <div className="w-32 h-32 rounded-[3.5rem] bg-red-50 flex items-center justify-center text-red-600 mx-auto mb-8 shadow-inner">
-                <Trash2 size={48} />
+            <div className="relative bg-white rounded-[3rem] p-10 text-center max-w-md shadow-[0_64px_256px_-64px_rgba(220,38,38,0.4)] animate-in zoom-in-95 duration-500 overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-red-600" />
+              <div className="w-20 h-20 rounded-[2rem] bg-red-50 flex items-center justify-center text-red-600 mx-auto mb-6 shadow-inner">
+                <Trash2 size={32} />
               </div>
-              <h3 className="text-4xl font-black text-gray-900 tracking-tighter mb-4 uppercase">Delete Record</h3>
-              <p className="text-gray-500 font-bold leading-relaxed mb-10">This will permanently delete this record. <span className="text-red-600 underline">THIS ACTION IS IRREVERSIBLE.</span></p>
-              <div className="flex flex-col gap-3">
-                <button onClick={handleDeleteConfirm} className="h-20 bg-red-600 hover:bg-red-700 text-white font-black text-xl rounded-[2.2rem] shadow-3xl shadow-red-200 transition-all hover:-translate-y-1 active:scale-95 uppercase tracking-tighter">Confirm Delete</button>
-                <button onClick={() => setDeleteSewadarId(null)} className="h-16 bg-white hover:bg-gray-50 text-gray-400 font-black rounded-[1.8rem] transition-all uppercase tracking-widest text-xs">Cancel</button>
+              <h3 className="text-xl font-black text-gray-900 tracking-tight mb-3 uppercase">Delete Record</h3>
+              <p className="text-gray-500 font-bold text-sm leading-relaxed mb-8">This will permanently delete this record. <span className="text-red-600 underline">Irreversible.</span></p>
+              <div className="flex flex-col gap-2">
+                <button onClick={handleDeleteConfirm} className="h-14 bg-red-600 hover:bg-red-700 text-white font-black text-sm rounded-2xl shadow-xl shadow-red-100 transition-all hover:-translate-y-0.5 active:scale-95 uppercase tracking-widest">Confirm Delete</button>
+                <button onClick={() => setDeleteSewadarId(null)} className="h-10 bg-white hover:bg-gray-50 text-gray-400 font-black rounded-xl transition-all uppercase tracking-widest text-[9px]">Cancel</button>
               </div>
             </div>
           </div>

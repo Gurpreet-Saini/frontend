@@ -265,36 +265,36 @@ export default function UsersPage() {
 
         {/* User Account Details Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-gray-900/80 backdrop-blur-xl animate-in fade-in duration-500">
-            <div className="bg-white rounded-[3.5rem] w-full max-w-xl shadow-[0_64px_256px_-64px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-500 border-4 border-white">
-              <div className="relative h-40 bg-gray-900 flex flex-col justify-center px-12">
-                 <div className="absolute right-0 top-0 w-64 h-64 bg-indigo-600/30 rounded-full translate-x-24 -translate-y-24 blur-3xl" />
-                 <p className="text-xs font-black text-indigo-400 uppercase tracking-[0.4em] mb-2">User Account Details</p>
-                 <h3 className="font-black text-4xl text-white tracking-widest uppercase">{isEditMode ? 'Edit User' : 'Create New User'}</h3>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-gray-900/40 backdrop-blur-xl animate-in fade-in duration-500">
+            <div className="bg-white rounded-[2.5rem] w-full max-w-lg shadow-[0_64px_256px_-64px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-500 border-2 border-white">
+              <div className="relative h-24 bg-gray-900 flex flex-col justify-center px-10">
+                 <div className="absolute right-0 top-0 w-48 h-48 bg-indigo-600/30 rounded-full translate-x-12 -translate-y-12 blur-3xl" />
+                 <p className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-1">User Account Details</p>
+                 <h3 className="font-black text-xl text-white tracking-widest uppercase">{isEditMode ? 'Edit User' : 'Create New User'}</h3>
                  <button 
                    onClick={() => setIsModalOpen(false)} 
-                   className="absolute right-10 top-10 text-white/30 hover:text-white transition-all bg-white/5 hover:bg-white/10 p-3 rounded-2xl"
+                   className="absolute right-8 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-all bg-white/5 hover:bg-white/10 p-2.5 rounded-xl"
                  >
-                   <X size={24} />
+                   <X size={20} />
                  </button>
               </div>
               
-              <form onSubmit={handleSubmit} className="p-10 space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">Username</label>
-                      <input required type="text" className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-black text-gray-900 shadow-inner" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
+              <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                   <div className="space-y-1">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">Username</label>
+                      <input required type="text" className="w-full px-5 py-3 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-xl outline-none transition-all font-bold text-gray-900 shadow-inner text-sm" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
                    </div>
-                   <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">{isEditMode ? 'New Password (Optional)' : 'Password'}</label>
-                      <input required={!isEditMode} type="password" minLength={6} className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-2xl outline-none transition-all font-black text-gray-900 shadow-inner" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+                   <div className="space-y-1">
+                      <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">{isEditMode ? 'New Password (Optional)' : 'Password'}</label>
+                      <input required={!isEditMode} type="password" minLength={6} className="w-full px-5 py-3 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-xl outline-none transition-all font-bold text-gray-900 shadow-inner text-sm" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
                    </div>
                 </div>
 
                 {isSuperAdmin && (
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">User Role</label>
-                    <select className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 rounded-2xl outline-none font-black text-gray-900 appearance-none shadow-inner" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">User Role</label>
+                    <select className="w-full px-5 py-3 bg-gray-50 border-2 border-transparent focus:border-indigo-600 rounded-xl outline-none font-bold text-gray-900 appearance-none shadow-inner text-sm" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
                       <option value="operator">Operator</option>
                       <option value="center_admin">Center Admin</option>
                       <option value="super_admin">Super Admin</option>
@@ -303,9 +303,9 @@ export default function UsersPage() {
                 )}
 
                 {isSuperAdmin && formData.role !== 'super_admin' && (
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">Center</label>
-                    <select className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 rounded-2xl outline-none font-black text-gray-900 appearance-none shadow-inner" value={formData.center_id} onChange={e => {
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">Center</label>
+                    <select className="w-full px-5 py-3 bg-gray-50 border-2 border-transparent focus:border-indigo-600 rounded-xl outline-none font-bold text-gray-900 appearance-none shadow-inner text-sm" value={formData.center_id} onChange={e => {
                         setFormData({...formData, center_id: e.target.value, department_id: ''});
                         fetchDepartmentsData(parseInt(e.target.value));
                     }}>
@@ -316,18 +316,18 @@ export default function UsersPage() {
                 )}
 
                 {formData.role === 'operator' && (
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">Department (Optional)</label>
-                    <select className="w-full px-6 py-4 bg-gray-50 border-2 border-transparent focus:border-indigo-600 rounded-2xl outline-none font-black text-gray-900 appearance-none shadow-inner" value={formData.department_id} onChange={e => setFormData({...formData, department_id: e.target.value})}>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-[0.3em] px-1">Department (Optional)</label>
+                    <select className="w-full px-5 py-3 bg-gray-50 border-2 border-transparent focus:border-indigo-600 rounded-xl outline-none font-bold text-gray-900 appearance-none shadow-inner text-sm" value={formData.department_id} onChange={e => setFormData({...formData, department_id: e.target.value})}>
                       <option value="">All Departments</option>
                       {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                     </select>
                   </div>
                 )}
 
-                <div className="pt-6 flex gap-4">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-5 text-xs font-black text-gray-400 uppercase tracking-widest hover:bg-gray-50 rounded-2xl transition-all">Cancel</button>
-                  <button type="submit" className="flex-[2] py-5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black uppercase tracking-[0.3em] rounded-2xl shadow-2xl shadow-indigo-100 transition-all active:scale-[0.98]">{isEditMode ? 'Save Changes' : 'Create User'}</button>
+                <div className="pt-4 flex gap-3">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:bg-gray-50 rounded-xl transition-all">Cancel</button>
+                  <button type="submit" className="flex-[2] py-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-xl shadow-lg shadow-indigo-100 transition-all active:scale-[0.98]">{isEditMode ? 'Save Changes' : 'Create User'}</button>
                 </div>
               </form>
             </div>
