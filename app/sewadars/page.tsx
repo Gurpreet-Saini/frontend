@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { 
   getSewadars, 
@@ -10,7 +10,8 @@ import {
   deleteSewadar, 
   transferSewadar,
   bulkUploadSewadars,
-  exportSewadars
+  exportSewadars,
+  getCenters
 } from '@/lib/api';
 import { Sewadar, Department } from '@/lib/types';
 import { 
@@ -24,17 +25,37 @@ import {
   X,
   UserPlus,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Users,
+  Filter,
+  ChevronRight,
+  MoreVertical,
+  UserCheck,
+  Phone,
+  Mail,
+  Building2,
+  ArrowRight,
+  Activity,
+  User,
+  Shield,
+  LayoutGrid,
+  CheckCircle2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatDate } from '@/lib/utils';
+import debounce from 'lodash/debounce';
+
+import { useAuth } from '@/lib/auth-context';
 
 export default function SewadarsPage() {
+  const { isSuperAdmin, token } = useAuth();
   const [sewadars, setSewadars] = useState<Sewadar[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [centers, setCenters] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [deptFilter, setDeptFilter] = useState('');
+  const [centerFilter, setCenterFilter] = useState('');
   
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -50,38 +71,81 @@ export default function SewadarsPage() {
     parent_spouse_name: '',
     gender: 'Male',
     badge_status: 'Permanent',
+    center_id: '',
     phone: '',
     email: ''
   });
   const [newDeptId, setNewDeptId] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
+  const [uploadCenterId, setUploadCenterId] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [limit, setLimit] = useState(25);
+
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkTransferDeptId, setBulkTransferDeptId] = useState('');
+  const [showBulkTransfer, setShowBulkTransfer] = useState(false);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (isSuperAdmin && token) {
+      getCenters().then(res => setCenters(res.data)).catch(() => {});
+    }
+  }, [isSuperAdmin, token]);
 
-  async function fetchData() {
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  const updateSearch = useCallback(
+    debounce((val: string) => {
+      setDebouncedSearch(val);
+    }, 500),
+    []
+  );
+
+  useEffect(() => {
+    updateSearch(search);
+  }, [search, updateSearch]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [centerFilter, deptFilter, debouncedSearch]);
+
+  useEffect(() => {
+    if (token) {
+      fetchData(currentPage);
+    }
+  }, [centerFilter, deptFilter, debouncedSearch, token, currentPage, limit]);
+
+  async function fetchData(page = currentPage) {
     setLoading(true);
     try {
+      const params: any = { page, limit };
+      if (centerFilter) params.center_id = centerFilter;
+      if (deptFilter) params.department_id = deptFilter;
+      if (debouncedSearch) params.q = debouncedSearch;
+
       const [sewsRes, deptsRes] = await Promise.all([
-        getSewadars(),
-        getDepartments()
+        getSewadars(params),
+        getDepartments({ center_id: centerFilter })
       ]);
-      setSewadars(sewsRes.data);
-      setDepartments(deptsRes.data);
+      
+      const { data, pagination } = sewsRes.data;
+      setSewadars(data || []);
+      if (pagination) {
+        setTotalPages(Math.ceil(pagination.total / limit));
+        setTotalRecords(pagination.total);
+      }
+      setDepartments(deptsRes.data || []);
     } catch (err) {
+      console.error('Fetch error:', err);
       toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
   }
 
-  const filteredSewadars = sewadars.filter(s => {
-    const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || 
-                          s.sewadar_id.toLowerCase().includes(search.toLowerCase());
-    const matchesDept = deptFilter ? s.department_id === Number(deptFilter) : true;
-    return matchesSearch && matchesDept;
-  });
+  const filteredSewadars = sewadars;
 
   const openModal = (type: 'add' | 'edit' | 'transfer' | 'upload', sewadar?: Sewadar) => {
     setModalType(type);
@@ -94,12 +158,17 @@ export default function SewadarsPage() {
         parent_spouse_name: sewadar.parent_spouse_name || '',
         gender: sewadar.gender || 'Male',
         badge_status: sewadar.badge_status || 'Permanent',
+        center_id: String(sewadar.center_id),
         phone: sewadar.phone || '',
         email: sewadar.email || ''
       });
       setNewDeptId('');
     } else {
-      setFormData({ name: '', sewadar_id: '', department_id: '', parent_spouse_name: '', gender: 'Male', badge_status: 'Permanent', phone: '', email: '' });
+      setFormData({ name: '', sewadar_id: '', department_id: '', parent_spouse_name: '', gender: 'Male', badge_status: 'Permanent', center_id: centerFilter || '', phone: '', email: '' });
+    }
+    if (type === 'upload') {
+      setUploadCenterId('');
+      setUploadFile(null);
     }
     setIsModalOpen(true);
   };
@@ -108,10 +177,18 @@ export default function SewadarsPage() {
     e.preventDefault();
     try {
       if (modalType === 'add') {
-        await createSewadar({ ...formData, department_id: formData.department_id ? Number(formData.department_id) : null });
+        await createSewadar({ 
+          ...formData, 
+          department_id: formData.department_id ? Number(formData.department_id) : null,
+          center_id: Number(formData.center_id)
+        });
         toast.success('Sewadar added');
       } else if (modalType === 'edit' && currentSewadar) {
-        await updateSewadar(currentSewadar.id, { ...formData, department_id: formData.department_id ? Number(formData.department_id) : null });
+        await updateSewadar(currentSewadar.id, { 
+          ...formData, 
+          department_id: formData.department_id ? Number(formData.department_id) : null,
+          center_id: Number(formData.center_id)
+        });
         toast.success('Sewadar updated');
       } else if (modalType === 'transfer' && currentSewadar) {
         await transferSewadar(currentSewadar.id, Number(newDeptId));
@@ -128,7 +205,7 @@ export default function SewadarsPage() {
     if (!uploadFile) return;
     try {
       setLoading(true);
-      await bulkUploadSewadars(uploadFile);
+      await bulkUploadSewadars(uploadFile, uploadCenterId ? Number(uploadCenterId) : undefined);
       toast.success('Bulk upload successful');
       setIsModalOpen(false);
       setUploadFile(null);
@@ -142,7 +219,11 @@ export default function SewadarsPage() {
 
   const handleExport = async () => {
     try {
-      const { data } = await exportSewadars(deptFilter ? Number(deptFilter) : undefined);
+      const params: any = {};
+      if (deptFilter) params.department_id = Number(deptFilter);
+      if (centerFilter) params.center_id = Number(centerFilter);
+      
+      const { data } = await exportSewadars(params);
       const url = window.URL.createObjectURL(new Blob([data]));
       const link = document.createElement('a');
       link.href = url;
@@ -171,336 +252,727 @@ export default function SewadarsPage() {
     }
   };
 
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === sewadars.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sewadars.map(s => s.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`Delete ${selectedIds.size} selected sewadars? This cannot be undone.`)) return;
+    try {
+      await Promise.all(Array.from(selectedIds).map(id => deleteSewadar(id)));
+      toast.success(`${selectedIds.size} sewadars deleted`);
+      setSelectedIds(new Set());
+      fetchData();
+    } catch (err) {
+      toast.error('Bulk delete partially failed');
+      fetchData();
+    }
+  };
+
+  const handleBulkTransfer = async () => {
+    if (!bulkTransferDeptId) { toast.error('Select a department first'); return; }
+    try {
+      await Promise.all(Array.from(selectedIds).map(id => transferSewadar(id, Number(bulkTransferDeptId))));
+      toast.success(`${selectedIds.size} sewadars transferred`);
+      setSelectedIds(new Set());
+      setShowBulkTransfer(false);
+      setBulkTransferDeptId('');
+      fetchData();
+    } catch (err) {
+      toast.error('Bulk transfer partially failed');
+    }
+  };
+
   return (
     <DashboardLayout>
-      <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Sewadars</h1>
-          <p className="text-gray-500 mt-1">Manage personnel records and assignments</p>
-        </div>
-        <div className="flex gap-3">
-          <button onClick={handleExport} className="btn-secondary">
-            <Download size={18} />
-            Export List
-          </button>
-          <button onClick={() => openModal('upload')} className="btn-secondary">
-            <Upload size={18} />
-            Bulk Upload
-          </button>
-          <button onClick={() => openModal('add')} className="btn-primary">
-            <Plus size={18} />
-            Add Sewadar
-          </button>
-        </div>
-      </div>
+      <div className="p-6 max-w-[1600px] mx-auto space-y-6 animate-fade-in pb-20">
+        {/* Premium Header */}
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-8">
+          <div className="space-y-2">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-indigo-600 rounded-2xl text-white shadow-xl shadow-indigo-100 -rotate-2 hover:rotate-0 transition-transform duration-500">
+                <Users size={24} />
+              </div>
+              <div>
+                <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase leading-none">Sewadar Management</h1>
+                <div className="flex items-center gap-3 mt-1.5">
+                   <div className="flex -space-x-2">
+                      {[1,2,3].map(i => (
+                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-[8px] font-black text-indigo-400">
+                          {String.fromCharCode(64 + i)}
+                        </div>
+                      ))}
+                   </div>
+                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                     {sewadars.length} Active Records
+                   </p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-      <div className="card shadow-sm mb-6 p-4 flex flex-col md:flex-row gap-4 items-center bg-white">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
-          <input
-            type="text"
-            className="input pl-10 h-11"
-            placeholder="Search by name or ID..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <div className="flex flex-wrap gap-2 w-full xl:w-auto">
+            <button 
+              onClick={handleExport} 
+              className="flex-1 lg:flex-none h-11 px-5 bg-white hover:bg-gray-50 border-2 border-gray-100 rounded-xl text-[11px] font-black text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Download size={16} className="text-indigo-400" /> 
+              <span>Export Excel</span>
+            </button>
+            <button 
+              onClick={() => openModal('upload')} 
+              className="flex-1 lg:flex-none h-11 px-5 bg-white hover:bg-gray-50 border-2 border-gray-100 rounded-xl text-[11px] font-black text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Upload size={16} className="text-indigo-400" /> 
+              <span>Import Excel</span>
+            </button>
+            <button 
+              onClick={() => openModal('add')} 
+              className="w-full lg:w-auto h-11 px-6 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-[11px] font-black text-white shadow-lg shadow-indigo-100 transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
+            >
+              <Plus size={18} /> 
+              <span>Add New Sewadar</span>
+            </button>
+          </div>
         </div>
-        <div className="w-full md:w-64">
-          <select
-            className="select h-11"
-            value={deptFilter}
-            onChange={(e) => setDeptFilter(e.target.value)}
-          >
-            <option value="">All Departments</option>
-            {departments.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
 
-      <div className="card shadow-sm overflow-hidden bg-white">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50/50">
-                <th className="table-th">Sewadar Details</th>
-                <th className="table-th">Department</th>
-                <th className="table-th">Contact Info</th>
-                <th className="table-th">Joined</th>
-                <th className="table-th text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {loading ? (
-                <tr>
-                  <td colSpan={5} className="p-12 text-center text-gray-400">
-                    <Loader2 className="animate-spin mx-auto mb-2" size={32} />
-                    <p>Loading sewadars...</p>
-                  </td>
-                </tr>
-              ) : filteredSewadars.length > 0 ? (
-                filteredSewadars.map((sw) => (
-                  <tr key={sw.id} className="table-tr">
-                    <td className="table-td">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-gray-900">{sw.name}</span>
-                        <span className="text-xs text-gray-500 font-mono tracking-tighter uppercase">{sw.sewadar_id}</span>
-                      </div>
-                    </td>
-                    <td className="table-td">
-                      <span className="badge badge-blue">{sw.department?.name}</span>
-                    </td>
-                    <td className="table-td">
-                      <div className="text-xs space-y-1">
-                        {sw.phone && <p className="text-gray-600 font-medium">☏ {sw.phone}</p>}
-                        {sw.email && <p className="text-gray-400">✉ {sw.email}</p>}
-                        {!sw.phone && !sw.email && <span className="text-gray-300 italic">No contact</span>}
-                      </div>
-                    </td>
-                    <td className="table-td text-gray-500 text-xs">
-                      {formatDate(sw.created_at)}
-                    </td>
-                    <td className="table-td text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => openModal('transfer', sw)} className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="Transfer Department">
-                          <MoveHorizontal size={18} />
-                        </button>
-                        <button onClick={() => openModal('edit', sw)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                          <Edit2 size={18} />
-                        </button>
-                        <button onClick={() => handleDeleteRequest(sw.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="p-12 text-center text-gray-400 italic">
-                    No sewadars found.
-                  </td>
-                </tr>
+        {/* Dynamic Filter Engine */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+           <div className="lg:col-span-6 relative group">
+              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={24} />
+              <input 
+                type="text" 
+                placeholder="Search by Name, ID, or Keywords..." 
+                className="w-full h-20 bg-white border-2 border-gray-100 focus:border-indigo-600 rounded-[2.5rem] pl-16 pr-8 text-lg font-bold text-gray-900 placeholder:text-gray-300 transition-all shadow-sm outline-none"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              {search && (
+                <button 
+                  onClick={() => setSearch('')}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-all"
+                >
+                  <X size={20} />
+                </button>
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+           </div>
 
-      {/* Modal Overlay */}
-      {isModalOpen && (
-        <div className="modal-overlay z-50">
-          <div className="modal-box max-w-lg lg:max-w-xl">
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-gray-900">
-                {modalType === 'add' && 'Add New Sewadar'}
-                {modalType === 'edit' && 'Edit Sewadar'}
-                {modalType === 'transfer' && 'Transfer Sewadar'}
-                {modalType === 'upload' && 'Bulk Upload Sewadars'}
-              </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                <X size={24} />
+           <div className="lg:col-span-3 card p-2 bg-white flex items-center shadow-sm border-gray-100 rounded-[2rem] h-20">
+              <Building2 className="ml-5 text-indigo-400" size={20} />
+              <select
+                className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-gray-700 font-black text-base appearance-none cursor-pointer"
+                value={centerFilter}
+                onChange={(e) => { setCenterFilter(e.target.value); setDeptFilter(''); }}
+              >
+                <option value="">ALL CENTERS</option>
+                {centers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+           </div>
+
+           <div className="lg:col-span-3 card p-2 bg-white flex items-center shadow-sm border-gray-100 rounded-[2rem] h-20">
+              <Filter className="ml-5 text-indigo-400" size={20} />
+              <select
+                className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-gray-700 font-black text-base appearance-none cursor-pointer"
+                value={deptFilter}
+                onChange={(e) => setDeptFilter(e.target.value)}
+              >
+                <option value="">ALL DEPARTMENTS</option>
+                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+           </div>
+        </div>
+
+        {/* Master Data View */}
+        <div className="relative group/view">
+          <div className="absolute -inset-2 bg-gradient-to-r from-indigo-50 via-white to-indigo-50 rounded-[4rem] blur-3xl opacity-0 group-hover/view:opacity-100 transition-opacity duration-1000" />
+          <div className="card relative bg-white/70 backdrop-blur-3xl border-none shadow-[0_32px_128px_-32px_rgba(0,0,0,0.08)] overflow-hidden rounded-[3.5rem]">
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-gray-50/30 border-b border-gray-100">
+                    <th className="px-4 py-4 w-10">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 rounded border-gray-300 text-indigo-600 cursor-pointer"
+                        checked={sewadars.length > 0 && selectedIds.size === sewadars.length}
+                        onChange={toggleSelectAll}
+                      />
+                    </th>
+                    <th className="px-6 py-4 text-left text-[11px] font-black text-gray-400 uppercase tracking-[0.4em]">Name</th>
+                    <th className="px-6 py-4 text-left text-[11px] font-black text-gray-400 uppercase tracking-[0.4em]">Center</th>
+                    <th className="px-6 py-4 text-left text-[11px] font-black text-gray-400 uppercase tracking-[0.4em]">Department</th>
+                    <th className="px-6 py-4 text-left text-[11px] font-black text-gray-400 uppercase tracking-[0.4em]">Gender</th>
+                    <th className="px-6 py-4 text-left text-[11px] font-black text-gray-400 uppercase tracking-[0.4em]">Contact</th>
+                    <th className="px-6 py-4 text-right text-[11px] font-black text-gray-400 uppercase tracking-[0.4em]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50/50">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={7} className="py-40">
+                         <div className="flex flex-col items-center justify-center gap-6">
+                            <div className="w-24 h-24 border-[12px] border-gray-100 border-t-indigo-600 rounded-full animate-spin shadow-inner" />
+                            <div className="text-center space-y-1">
+                               <p className="text-lg font-black text-indigo-900 tracking-widest uppercase">Loading Sewadars...</p>
+                               <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">Updating Records</p>
+                            </div>
+                         </div>
+                      </td>
+                    </tr>
+                  ) : sewadars.length > 0 ? (
+                    sewadars.map((sw) => (
+                       <tr key={sw.id} className={`group hover:bg-white hover:shadow-xl transition-all duration-300 ${selectedIds.has(sw.id) ? 'bg-indigo-50/50' : ''}`}>
+                        <td className="px-4 py-3">
+                           <input
+                             type="checkbox"
+                             className="w-4 h-4 rounded border-gray-300 text-indigo-600 cursor-pointer"
+                             checked={selectedIds.has(sw.id)}
+                             onChange={() => toggleSelect(sw.id)}
+                             onClick={e => e.stopPropagation()}
+                           />
+                         </td>
+                        <td className="px-6 py-3">
+                          <div className="flex items-center gap-4">
+                             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-white border border-indigo-100 flex items-center justify-center text-indigo-600 font-black text-sm shadow-sm transition-all duration-300">
+                               {sw.name[0]}
+                             </div>
+                             <div className="space-y-1">
+                                <p className="text-base font-black text-gray-900 tracking-tight group-hover:text-indigo-700 transition-colors uppercase leading-tight">{sw.name}</p>
+                                <div className="flex items-center gap-2">
+                                   <span className="text-[9px] font-black text-indigo-400 tracking-widest uppercase px-1.5 py-0.5 bg-indigo-50 rounded">ID: {sw.sewadar_id}</span>
+                                   <span className={`text-[9px] font-black tracking-widest uppercase px-1.5 py-0.5 rounded ${
+                                     sw.badge_status === 'Permanent' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
+                                   }`}>{sw.badge_status}</span>
+                                </div>
+                             </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                               <Building2 size={14} className="text-gray-300 shrink-0" />
+                               <p className="text-xs font-bold text-gray-700 truncate">{sw.center?.name || '—'}</p>
+                            </div>
+                         </td>
+                         <td className="px-4 py-3">
+                            <p className="text-xs font-bold text-gray-700 truncate">{sw.department?.name || '—'}</p>
+                         </td>
+                         <td className="px-4 py-3">
+                            <span className={`inline-block text-[10px] font-black uppercase px-2 py-0.5 rounded ${
+                              sw.gender === 'Male' ? 'bg-blue-50 text-blue-600' : sw.gender === 'Female' ? 'bg-pink-50 text-pink-600' : 'bg-gray-50 text-gray-400'
+                            }`}>{sw.gender || '—'}</span>
+                         </td>
+                        <td className="px-6 py-4">
+                           <div className="space-y-1.5">
+                              {sw.phone && (
+                                <div className="flex items-center gap-2 text-gray-600 group-hover:text-indigo-600 transition-colors">
+                                   <Phone size={14} className="opacity-40" />
+                                   <span className="text-[11px] font-black tabular-nums">{sw.phone}</span>
+                                </div>
+                              )}
+                              {sw.email && (
+                                <div className="flex items-center gap-2 text-gray-400">
+                                   <Mail size={14} className="opacity-40" />
+                                   <span className="text-[10px] font-bold truncate max-w-[120px]">{sw.email}</span>
+                                </div>
+                              )}
+                              {!sw.phone && !sw.email && <span className="text-[9px] font-black text-gray-300 tracking-widest uppercase italic bg-gray-50 px-2 py-0.5 rounded">No Metadata</span>}
+                           </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                           <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                              <button 
+                                onClick={() => openModal('transfer', sw)} 
+                                className="p-2.5 bg-gray-50 text-gray-400 hover:text-indigo-600 hover:bg-white rounded-xl shadow-sm border border-transparent hover:border-indigo-100 transition-all hover:scale-105"
+                                title="Transfer Department"
+                              >
+                                <MoveHorizontal size={18} />
+                              </button>
+                              <button 
+                                onClick={() => openModal('edit', sw)} 
+                                className="p-2.5 bg-gray-50 text-gray-400 hover:text-blue-600 hover:bg-white rounded-xl shadow-sm border border-transparent hover:border-blue-100 transition-all hover:scale-105"
+                                title="Edit Profile"
+                              >
+                                <Edit2 size={18} />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteRequest(sw.id)} 
+                                className="p-2.5 bg-gray-50 text-gray-400 hover:text-red-600 hover:bg-white rounded-xl shadow-sm border border-transparent hover:border-red-100 transition-all hover:scale-105"
+                                title="Delete Record"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                           </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="py-48 text-center">
+                         <div className="flex flex-col items-center justify-center gap-8 relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/20 to-transparent pointer-events-none" />
+                            <div className="w-32 h-32 bg-gray-50 rounded-[3rem] flex items-center justify-center text-gray-100 border-4 border-white shadow-2xl relative z-10">
+                               <Users size={64} />
+                            </div>
+                            <div className="space-y-2 relative z-10 text-center">
+                              <p className="text-3xl font-black text-gray-400 tracking-tighter uppercase">No Records Found</p>
+                              <p className="text-gray-300 text-sm italic font-medium max-w-sm mx-auto">No records found matching your search criteria.</p>
+                             </div>
+                          </div>
+                       </td>
+                     </tr>
+                   )}
+                 </tbody>
+               </table>
+            </div>
+            {/* Pagination Bar — always visible */}
+            <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
+              {/* Left: per-page selector + record summary */}
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Show</span>
+                <select
+                  className="h-9 px-3 bg-white border border-gray-200 rounded-xl text-xs font-black text-gray-700 appearance-none cursor-pointer outline-none focus:border-indigo-400 transition-all shadow-sm"
+                  value={limit}
+                  onChange={e => { setLimit(Number(e.target.value)); setCurrentPage(1); }}
+                >
+                  {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
+                </select>
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">per page</span>
+                <div className="h-4 w-px bg-gray-200" />
+                <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">
+                  {totalRecords} Total Sewadars
+                </span>
+              </div>
+
+              {/* Right: page nav */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-indigo-600 hover:border-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm active:scale-95"
+                  >
+                    ← Prev
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).slice(
+                      Math.max(0, currentPage - 3),
+                      Math.min(totalPages, currentPage + 2)
+                    ).map(page => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-9 h-9 rounded-xl text-[10px] font-black transition-all ${
+                          currentPage === page
+                          ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100'
+                          : 'bg-white text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 border border-gray-200'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-indigo-600 hover:border-indigo-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm active:scale-95"
+                  >
+                    Next →
+                  </button>
+                  <span className="text-[10px] font-black text-gray-400 ml-2">Page {currentPage}/{totalPages}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Bulk Action Bar */}
+        {selectedIds.size > 0 && (
+          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 animate-in slide-in-from-bottom-4 duration-300">
+            <div className="bg-gray-900 text-white rounded-2xl shadow-2xl px-6 py-4 flex items-center gap-4 border border-white/10">
+              <span className="text-sm font-black">{selectedIds.size} selected</span>
+              <div className="w-px h-5 bg-white/20" />
+              {!showBulkTransfer ? (
+                <>
+                  <button
+                    onClick={() => setShowBulkTransfer(true)}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
+                  >
+                    Transfer Dept
+                  </button>
+                  <button
+                    onClick={handleBulkDelete}
+                    className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
+                  >
+                    Delete
+                  </button>
+                </>
+              ) : (
+                <>
+                  <select
+                    className="bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-sm font-bold text-white appearance-none outline-none"
+                    value={bulkTransferDeptId}
+                    onChange={e => setBulkTransferDeptId(e.target.value)}
+                  >
+                    <option value="">Select Department...</option>
+                    {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                  </select>
+                  <button
+                    onClick={handleBulkTransfer}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    onClick={() => { setShowBulkTransfer(false); setBulkTransferDeptId(''); }}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+              <button
+                onClick={() => { setSelectedIds(new Set()); setShowBulkTransfer(false); }}
+                className="ml-2 text-gray-400 hover:text-white transition-colors text-xs font-black uppercase tracking-widest"
+              >
+                ✕ Clear
               </button>
             </div>
+          </div>
+        )}
 
-            <div className="p-6">
-              {modalType === 'upload' ? (
-                <div className="space-y-6">
-                  <div className="border-2 border-dashed border-gray-200 rounded-2xl p-12 text-center hover:border-primary-300 hover:bg-primary-50/50 transition-all group flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 mb-4 group-hover:scale-110 transition-transform">
-                      <Upload size={32} />
+        {/* Enhanced Modal Engine */}
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300 overflow-y-auto">
+            <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-2xl" onClick={() => setIsModalOpen(false)} />
+            
+            <div className="relative bg-white/95 backdrop-blur-xl rounded-[4rem] shadow-[0_64px_256px_-64px_rgba(0,0,0,0.3)] w-full max-w-3xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 pb-8">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-indigo-600 to-indigo-900 p-12 text-white relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-96 h-96 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                 <div className="relative z-10 flex justify-between items-center">
+                    <div>
+                       <p className="text-[10px] font-black uppercase tracking-[0.4em] text-indigo-200 mb-2">Management System</p>
+                       <h3 className="text-4xl font-black tracking-tight">
+                         {modalType === 'add' && 'Add Sewadar'}
+                         {modalType === 'edit' && 'Update Sewadar'}
+                         {modalType === 'transfer' && 'Transfer Sewadar'}
+                         {modalType === 'upload' && 'Import Excel Data'}
+                       </h3>
                     </div>
-                    <label className="cursor-pointer">
-                      <span className="text-primary-600 font-bold hover:underline">Click to upload</span> or drag and drop
-                      <input 
-                        type="file" 
-                        className="hidden" 
-                        accept=".xlsx" 
-                        onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                      />
-                    </label>
-                    <p className="text-xs text-gray-400 mt-2">Excel (.xlsx) files only</p>
-                    {uploadFile && (
-                      <div className="mt-4 p-3 bg-green-50 border border-green-100 rounded-xl flex items-center gap-2 text-green-700 text-sm">
-                        <AlertCircle size={16} />
-                        Selected: <span className="font-bold">{uploadFile.name}</span>
+                    <button onClick={() => setIsModalOpen(false)} className="w-16 h-16 bg-white/10 hover:bg-white/20 rounded-[2rem] flex items-center justify-center transition-all active:scale-90">
+                       <X size={32} />
+                    </button>
+                 </div>
+              </div>
+
+              <div className="p-12">
+                {modalType === 'upload' ? (
+                  <div className="space-y-8">
+                    {/* Center Selection for Super Admin */}
+                    {isSuperAdmin && (
+                      <div className="bg-gray-50 rounded-[2rem] p-8 border border-gray-100 space-y-4">
+                         <div className="flex items-center gap-3 mb-2">
+                           <div className="p-2 bg-indigo-100 rounded-xl text-indigo-600">
+                             <Building2 size={18} />
+                           </div>
+                           <p className="text-xs font-black text-gray-900 uppercase tracking-widest">
+                             Select Target Center
+                           </p>
+                         </div>
+                         <select
+                           className="w-full h-16 bg-white border-2 border-gray-100 focus:border-indigo-600 rounded-2xl px-6 text-gray-900 font-extrabold transition-all outline-none"
+                           value={uploadCenterId}
+                           onChange={(e) => setUploadCenterId(e.target.value)}
+                           required
+                         >
+                           <option value="">Choose a center...</option>
+                           {centers.map(c => (
+                             <option key={c.id} value={c.id}>{c.name}</option>
+                           ))}
+                         </select>
+                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                           * All records in the file will be assigned to this center
+                         </p>
                       </div>
                     )}
-                  </div>
-                  <div className="bg-gray-50 rounded-xl p-4 text-xs text-gray-500 space-y-2 border border-gray-100">
-                    <p className="font-bold text-gray-700 mb-1">Upload Instructions:</p>
-                    <p>• Header row is required.</p>
-                    <p>• Columns: Sewadar ID, Name, Department ID, Phone, Email, Parent/Spouse Name, Gender, Badge Status.</p>
-                  </div>
-                  <div className="flex justify-end gap-3 pt-4">
-                    <button onClick={() => setIsModalOpen(false)} className="btn-secondary">Cancel</button>
-                    <button onClick={handleBulkUpload} disabled={!uploadFile || loading} className="btn-primary px-8">
-                      {loading ? <Loader2 className="animate-spin" size={18} /> : 'Start Upload'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-5">
-                  {(modalType === 'add' || modalType === 'edit') && (
-                    <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="label">Name</label>
-                          <input
-                            type="text"
-                            className="input"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="label">Sewadar ID</label>
-                          <input
-                            type="text"
-                            className="input font-mono uppercase"
-                            value={formData.sewadar_id}
-                            onChange={(e) => setFormData({ ...formData, sewadar_id: e.target.value.toUpperCase() })}
-                            required
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="label">Department</label>
-                          <select
-                            className="select"
-                            value={formData.department_id}
-                            onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
-                          >
-                            <option value="">Select Department</option>
-                            {departments.map((d) => (
-                              <option key={d.id} value={d.id}>{d.name}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="label">Parent/Spouse Name</label>
-                          <input
-                            type="text"
-                            className="input"
-                            value={formData.parent_spouse_name}
-                            onChange={(e) => setFormData({ ...formData, parent_spouse_name: e.target.value })}
-                          />
-                        </div>
-                      </div>
 
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="label">Gender</label>
-                          <select
-                            className="select"
-                            value={formData.gender}
-                            onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                          >
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="label">Badge Status</label>
-                          <select
-                            className="select"
-                            value={formData.badge_status}
-                            onChange={(e) => setFormData({ ...formData, badge_status: e.target.value })}
-                          >
-                            <option value="Permanent">Permanent</option>
-                            <option value="Open">Open</option>
-                          </select>
-                        </div>
+                    <div className="flex flex-col items-center py-12 bg-white rounded-[3rem] border-4 border-dashed border-gray-100 hover:border-indigo-200 transition-colors relative group overflow-hidden">
+                      <div className="absolute inset-0 bg-indigo-50/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="w-24 h-24 rounded-[2.5rem] bg-indigo-100 flex items-center justify-center text-indigo-600 mb-6 group-hover:scale-110 transition-transform shadow-inner relative z-10">
+                        <Upload size={40} />
                       </div>
+                      <label className="cursor-pointer relative z-10">
+                        <span className="text-2xl font-black text-gray-900 block mb-2">Upload Sewadar Records</span>
+                        <span className="text-indigo-600 font-bold hover:underline">Select Excel File (.xlsx)</span>
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          accept=".xlsx" 
+                          onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                        />
+                      </label>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mt-6 bg-white px-6 py-2 rounded-full border border-gray-100 shadow-sm relative z-10">Standard Excel Format</p>
                       
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="label">Phone (Optional)</label>
-                          <input
-                            type="text"
-                            className="input"
-                            value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          />
+                      {uploadFile && (
+                        <div className="mt-8 p-5 bg-indigo-600 text-white rounded-3xl flex items-center gap-4 animate-in slide-in-from-bottom-4 shadow-2xl relative z-20">
+                          <CheckCircle2 size={24} />
+                          <div className="text-left">
+                             <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200">File Selected</p>
+                             <p className="text-lg font-black">{uploadFile.name}</p>
+                          </div>
                         </div>
-                        <div>
-                          <label className="label">Email (Optional)</label>
-                          <input
-                            type="email"
-                            className="input"
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
-
-                  {modalType === 'transfer' && (
-                    <div className="space-y-4">
-                      <div className="p-4 bg-primary-50 rounded-xl border border-primary-100 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary-200 flex items-center justify-center text-primary-700 order-last">
-                           <MoveHorizontal size={24} />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-xs text-primary-600 font-bold uppercase tracking-wider mb-0.5">Transferring Sewadar</p>
-                          <p className="font-bold text-gray-900">{currentSewadar?.name}</p>
-                          <p className="text-xs text-gray-500">Currently in: <span className="font-bold">{currentSewadar?.department?.name}</span></p>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="label">New Department</label>
-                        <select
-                          className="select"
-                          value={newDeptId}
-                          onChange={(e) => setNewDeptId(e.target.value)}
-                          required
-                        >
-                          <option value="">Select Department</option>
-                          {departments.map((d) => (
-                            <option key={d.id} value={d.id}>{d.name}</option>
-                          ))}
-                        </select>
-                      </div>
+                      )}
                     </div>
-                  )}
 
-                  <div className="flex justify-end gap-3 pt-6 border-t border-gray-50 mt-4">
-                    <button type="button" onClick={() => setIsModalOpen(false)} className="btn-secondary">Cancel</button>
-                    <button type="submit" className="btn-primary px-10">
-                      {modalType === 'add' ? 'Save Sewadar' : modalType === 'edit' ? 'Update Details' : 'Confirm Transfer'}
-                    </button>
+                    <div className="flex flex-col md:flex-row gap-4">
+                       <div className="flex-1 bg-gray-50 rounded-[2rem] p-8 border border-gray-100">
+                          <p className="text-xs font-black text-gray-900 uppercase tracking-widest mb-6 flex items-center gap-2">
+                             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                             Format Instructions
+                          </p>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                              <thead>
+                                <tr className="text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-200">
+                                  <th className="pb-2 pr-4">Col</th>
+                                  <th className="pb-2 pr-4">Field</th>
+                                  <th className="pb-2">Status</th>
+                                </tr>
+                              </thead>
+                              <tbody className="text-[10px] font-bold text-gray-600">
+                                <tr className="border-b border-gray-100/50"><td className="py-2">A</td><td className="py-2">Sewadar ID</td><td className="py-2 text-red-500">Required</td></tr>
+                                <tr className="border-b border-gray-100/50"><td className="py-2">B</td><td className="py-2">Full Name</td><td className="py-2 text-red-500">Required</td></tr>
+                                <tr className="border-b border-gray-100/50"><td className="py-2">C</td><td className="py-2">Parent/Spouse</td><td className="py-2 text-red-500">Required</td></tr>
+                                <tr className="border-b border-gray-100/50"><td className="py-2">D</td><td className="py-2">Gender</td><td className="py-2 text-red-500">Required</td></tr>
+                                <tr><td className="py-2">E</td><td className="py-2">Badge Status</td><td className="py-2 text-red-500">Required</td></tr>
+                              </tbody>
+                            </table>
+                          </div>
+                       </div>
+                       <button onClick={handleBulkUpload} disabled={!uploadFile || loading} className="h-24 md:w-64 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-200 text-white rounded-[2.5rem] flex flex-col items-center justify-center gap-1 shadow-2xl shadow-indigo-100 transition-all hover:-translate-y-2 active:scale-95">
+                          {loading ? (
+                             <Loader2 className="animate-spin" size={32} />
+                          ) : (
+                             <>
+                               <p className="text-2xl font-black tracking-tighter">Upload File</p>
+                               <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">Save to System</p>
+                             </>
+                          )}
+                       </button>
+                    </div>
                   </div>
-                </form>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-8">
+                    {(modalType === 'add' || modalType === 'edit') && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                         <div className="space-y-8">
+                            <div className="space-y-3 px-4">
+                               <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Full Name</label>
+                               <div className="relative group">
+                                  <User className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
+                                  <input
+                                    type="text"
+                                    className="w-full h-16 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-3xl pl-16 pr-6 text-gray-900 font-extrabold transition-all shadow-inner outline-none"
+                                    value={formData.name || ''}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    placeholder="Enter full name..."
+                                    required
+                                  />
+                               </div>
+                            </div>
 
-      {/* Delete Confirmation Modal */}
-      {deleteSewadarId !== null && (
-        <div className="modal-overlay z-[60]">
-          <div className="modal-box max-w-sm">
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-red-600 mx-auto mb-4">
-                <Trash2 size={32} />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Delete Sewadar?</h3>
-              <p className="text-gray-500 mb-6">This action cannot be undone. All attendance records linked to this profile will also be deleted.</p>
-              <div className="flex gap-3 justify-center">
-                <button onClick={() => setDeleteSewadarId(null)} className="btn-secondary px-6">Cancel</button>
-                <button onClick={handleDeleteConfirm} className="btn-primary bg-red-600 hover:bg-red-700 border-none px-6">Delete</button>
+                            <div className="space-y-3 px-4">
+                               <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Sewadar ID</label>
+                               <div className="relative group">
+                                  <Shield className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" size={20} />
+                                  <input
+                                    type="text"
+                                    className="w-full h-16 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-3xl pl-16 pr-6 text-gray-900 font-black tracking-widest uppercase transition-all shadow-inner outline-none"
+                                    value={formData.sewadar_id}
+                                    onChange={(e) => setFormData({ ...formData, sewadar_id: e.target.value.toUpperCase() })}
+                                    placeholder="REG-0000X"
+                                    required
+                                  />
+                               </div>
+                            </div>
+
+                            <div className="space-y-3 px-4">
+                               <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Department</label>
+                               <div className="relative group">
+                                  <LayoutGrid className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" size={20} />
+                                  <select
+                                    className="w-full h-16 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-3xl pl-16 pr-8 text-gray-900 font-bold appearance-none transition-all shadow-inner outline-none cursor-pointer"
+                                    value={formData.department_id}
+                                    onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
+                                  >
+                                    <option value="">Map to Department...</option>
+                                    {departments.map((d) => (
+                                      <option key={d.id} value={d.id}>{d.name}</option>
+                                    ))}
+                                  </select>
+                               </div>
+                            </div>
+                         </div>
+
+                         <div className="space-y-8">
+                            <div className="space-y-3 px-4">
+                               <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Parent/Spouse Name</label>
+                               <div className="relative group">
+                                  <UserCheck size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" />
+                                  <input
+                                    type="text"
+                                    className="w-full h-16 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-3xl pl-16 pr-6 text-gray-900 font-extrabold transition-all shadow-inner outline-none"
+                                    value={formData.parent_spouse_name}
+                                    onChange={(e) => setFormData({ ...formData, parent_spouse_name: e.target.value })}
+                                    placeholder="Enter parent/spouse name..."
+                                    required
+                                  />
+                               </div>
+                            </div>
+
+                            <div className="space-y-3 px-4">
+                               <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Phone Number</label>
+                               <div className="relative group">
+                                  <Phone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" size={20} />
+                                  <input
+                                    type="text"
+                                    className="w-full h-16 bg-gray-50 focus:bg-white border-2 border-transparent focus:border-indigo-600 rounded-3xl pl-16 pr-6 text-gray-900 font-black tracking-tighter transition-all shadow-inner outline-none"
+                                    value={formData.phone}
+                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    placeholder="+91-0000000000"
+                                  />
+                               </div>
+                            </div>
+
+                            <div className="flex gap-4 px-4">
+                               <div className="flex-1 space-y-3">
+                                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Status</label>
+                                    <select
+                                    className="w-full h-16 bg-indigo-50 border-2 border-indigo-100 focus:border-indigo-600 focus:bg-white rounded-3xl px-6 text-indigo-700 font-black appearance-none transition-all outline-none cursor-pointer"
+                                    value={formData.badge_status}
+                                    onChange={(e) => setFormData({ ...formData, badge_status: e.target.value })}
+                                    required
+                                  >
+                                    <option value="Permanent">Permanent</option>
+                                    <option value="Open">Open</option>
+                                    <option value="Elderly">Elderly</option>
+                                  </select>
+                               </div>
+                               <div className="flex-1 space-y-3">
+                                  <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Gender</label>
+                                    <select
+                                    className="w-full h-16 bg-gray-50 border-2 border-transparent focus:border-indigo-600 focus:bg-white rounded-3xl px-6 text-gray-700 font-black appearance-none transition-all outline-none cursor-pointer"
+                                    value={formData.gender}
+                                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                                    required
+                                  >
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                  </select>
+                               </div>
+                            </div>
+
+                            {isSuperAdmin && (
+                              <div className="space-y-3 px-4 transition-all animate-in slide-in-from-top-4 duration-500">
+                                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.3em] ml-1">Center</label>
+                                 <div className="relative group">
+                                    <Building2 className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-indigo-600 transition-colors" size={20} />
+                                    <select
+                                      className="w-full h-16 bg-gray-900 text-white border-2 border-transparent focus:border-indigo-400 rounded-3xl pl-16 pr-8 text-lg font-black appearance-none transition-all shadow-2xl outline-none cursor-pointer"
+                                      value={formData.center_id}
+                                      onChange={(e) => setFormData({ ...formData, center_id: e.target.value })}
+                                      required
+                                    >
+                                      <option value="">Select Center...</option>
+                                      {centers.map((c) => (
+                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                      ))}
+                                    </select>
+                                 </div>
+                              </div>
+                            )}
+                         </div>
+                      </div>
+                    )}
+
+                    {modalType === 'transfer' && (
+                      <div className="space-y-10 py-4 px-4 animate-in fade-in zoom-in-95 duration-500">
+                        <div className="p-10 bg-gradient-to-br from-indigo-50 via-white to-gray-50 rounded-[3.5rem] border-2 border-indigo-100 flex flex-col items-center text-center gap-6 shadow-xl">
+                          <div className="w-24 h-24 rounded-[2.5rem] bg-indigo-600 text-white flex items-center justify-center shadow-2xl shadow-indigo-200 animate-bounce">
+                             <MoveHorizontal size={40} />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.4em] mb-2">Transferring Sewadar</p>
+                            <h4 className="text-3xl font-black text-gray-900 tracking-tighter uppercase">{currentSewadar?.name}</h4>
+                            <p className="text-gray-400 font-bold mt-2">Current Department: <span className="text-indigo-600 px-3 py-1 bg-indigo-50 rounded-lg ml-1">{currentSewadar?.department?.name}</span></p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4 max-w-md mx-auto">
+                           <label className="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em] text-center block w-full">New Department</label>
+                           <div className="relative group">
+                              <LayoutGrid className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600" size={24} />
+                              <select
+                                className="w-full h-20 bg-white border-[3px] border-gray-100 focus:border-indigo-600 rounded-[2.5rem] pl-16 pr-10 text-xl font-black appearance-none transition-all shadow-xl outline-none cursor-pointer"
+                                value={newDeptId}
+                                onChange={(e) => setNewDeptId(e.target.value)}
+                                required
+                              >
+                                <option value="">Select Department...</option>
+                                {departments.map((d) => (
+                                  <option key={d.id} value={d.id}>{d.name}</option>
+                                ))}
+                              </select>
+                           </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex flex-col md:flex-row gap-4 pt-10 border-t-2 border-gray-100 px-4">
+                      <button type="button" onClick={() => setIsModalOpen(false)} className="h-20 flex-1 bg-white hover:bg-gray-50 border-2 border-gray-100 text-gray-400 font-black uppercase tracking-widest rounded-[2rem] transition-all hover:text-gray-900">Cancel</button>
+                      <button type="submit" className="h-20 flex-[2] bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xl uppercase tracking-tighter rounded-[2.5rem] shadow-2xl shadow-indigo-100 transition-all hover:-translate-y-1 active:scale-95">
+                        {modalType === 'add' ? 'Add Sewadar' : modalType === 'edit' ? 'Save Changes' : 'Transfer Sewadar'}
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Delete Confirmation Protocol */}
+        {deleteSewadarId !== null && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
+            <div className="fixed inset-0 bg-gray-900/80 backdrop-blur-3xl" onClick={() => setDeleteSewadarId(null)} />
+            <div className="relative bg-white rounded-[4rem] p-16 text-center max-w-lg shadow-[0_64px_256px_-64px_rgba(220,38,38,0.4)] animate-in zoom-in-95 duration-500 overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-red-600" />
+              <div className="w-32 h-32 rounded-[3.5rem] bg-red-50 flex items-center justify-center text-red-600 mx-auto mb-8 shadow-inner">
+                <Trash2 size={48} />
+              </div>
+              <h3 className="text-4xl font-black text-gray-900 tracking-tighter mb-4 uppercase">Delete Record</h3>
+              <p className="text-gray-500 font-bold leading-relaxed mb-10">This will permanently delete this record. <span className="text-red-600 underline">THIS ACTION IS IRREVERSIBLE.</span></p>
+              <div className="flex flex-col gap-3">
+                <button onClick={handleDeleteConfirm} className="h-20 bg-red-600 hover:bg-red-700 text-white font-black text-xl rounded-[2.2rem] shadow-3xl shadow-red-200 transition-all hover:-translate-y-1 active:scale-95 uppercase tracking-tighter">Confirm Delete</button>
+                <button onClick={() => setDeleteSewadarId(null)} className="h-16 bg-white hover:bg-gray-50 text-gray-400 font-black rounded-[1.8rem] transition-all uppercase tracking-widest text-xs">Cancel</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </DashboardLayout>
   );
 }

@@ -16,7 +16,10 @@ export interface Department {
 export interface Sewadar {
   id: number;
   sewadar_id: string;
+  uuid?: string;
   name: string;
+  center_id: number;
+  center?: Center;
   department_id: number;
   department?: Department;
   parent_spouse_name?: string;
@@ -31,6 +34,8 @@ export interface Attendance {
   id: number;
   sewadar_id: number;
   sewadar?: Sewadar;
+  center_id: number;
+  center?: Center;
   department_id: number;
   department?: Department;
   date: string;
@@ -44,4 +49,5 @@ export interface DashboardStats {
   total_sewadars: number;
   today_attendance: number;
   today_by_dept: { id: number; name: string; count: number }[];
+  today_by_center: { id: number; name: string; count: number }[];
 }

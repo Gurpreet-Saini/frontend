@@ -5,8 +5,11 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 export interface AuthUser {
   id: number;
   username: string;
-  role: 'center_admin' | 'operator' | 'dept_viewer';
+   role: 'super_admin' | 'center_admin' | 'operator' | 'dept_viewer';
+  department_id?: number | null;
   department?: { id: number; name: string } | null;
+  center_id?: number | null;
+  center?: { id: number; name: string; location: string } | null;
 }
 
 interface AuthContextType {
@@ -15,6 +18,7 @@ interface AuthContextType {
   login: (token: string, user: AuthUser) => void;
   logout: () => void;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   isOperator: boolean;
   canMarkAttendance: boolean;
 }
@@ -54,9 +58,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider value={{
       user, token, login, logout,
-      isAdmin: user?.role === 'center_admin',
+      isAdmin: user?.role === 'center_admin' || user?.role === 'super_admin',
+      isSuperAdmin: user?.role === 'super_admin',
       isOperator: user?.role === 'operator',
-      canMarkAttendance: user?.role === 'center_admin' || user?.role === 'operator',
+      canMarkAttendance: user?.role === 'center_admin' || user?.role === 'operator' || user?.role === 'super_admin',
     }}>
       {children}
     </AuthContext.Provider>

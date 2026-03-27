@@ -5,12 +5,13 @@ import { useRouter } from 'next/navigation';
 import { login as loginApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import toast from 'react-hot-toast';
-import { User, Lock, Loader2 } from 'lucide-react';
+import { User, Lock, Loader2, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
@@ -51,6 +52,7 @@ export default function LoginPage() {
                   type="text"
                   className="input pl-10"
                   placeholder="admin"
+                  autoComplete="username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -63,13 +65,21 @@ export default function LoginPage() {
               <div className="relative">
                 <Lock className="absolute left-3 top-2.5 text-gray-400" size={18} />
                 <input
-                  type="password"
-                  className="input pl-10"
+                  type={showPassword ? "text" : "password"}
+                  className="input pl-10 pr-10"
                   placeholder="••••••••"
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 

@@ -8,6 +8,8 @@ import { useAuth } from '@/lib/auth-context';
   Users, 
   UserCheck, 
   Building2, 
+  Building,
+  UserCog,
   LogOut, 
   LayoutDashboard
 } from 'lucide-react';
@@ -16,11 +18,13 @@ import { cn } from '@/lib/utils';
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { user, logout, isAdmin, canMarkAttendance } = useAuth();
+  const { user, logout, isAdmin, isSuperAdmin, canMarkAttendance } = useAuth();
 
   const links = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Sewadar Mgmt', href: '/sewadars', icon: Users, show: isAdmin },
+    { name: 'Centers', href: '/dashboard/centers', icon: Building, show: isSuperAdmin },
+    { name: 'Users', href: '/dashboard/users', icon: UserCog, show: isAdmin },
+    { name: 'Sewadars', href: '/sewadars', icon: Users, show: isAdmin },
     { name: 'Attendance', href: '/attendance', icon: UserCheck, show: canMarkAttendance },
     { name: 'Departments', href: '/departments', icon: Building2 },
   ];
@@ -67,7 +71,10 @@ export default function Sidebar() {
             </div>
             <div className="overflow-hidden">
               <p className="text-xs font-bold text-gray-900 truncate uppercase mt-0.5">{user?.username}</p>
-              <p className="text-[10px] text-gray-500 font-medium truncate uppercase tracking-tighter">{user?.role?.replace('_', ' ')}</p>
+              <p className="text-[10px] text-gray-500 font-medium truncate uppercase tracking-tighter">
+                {user?.role?.replace('_', ' ')}
+                {user?.center ? ` • ${user.center.name}` : ''}
+              </p>
             </div>
           </div>
         </div>
