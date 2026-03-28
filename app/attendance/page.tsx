@@ -63,6 +63,21 @@ export default function AttendancePage() {
   const [editingRecord, setEditingRecord] = useState<Attendance | null>(null);
   const [editFormData, setEditFormData] = useState({ check_in: '', check_out: '' });
 
+  // Table search state
+  const [tableSearch, setTableSearch] = useState('');
+
+  // Checkout search state
+  const [checkoutQuery, setCheckoutQuery] = useState('');
+
+  // Derived: sewadars currently on duty (no checkout yet)
+  const activeSewadars = attendance.filter(a => !a.check_out);
+  const filteredCheckoutResults = checkoutQuery.trim()
+    ? activeSewadars.filter(a =>
+        a.sewadar?.name.toLowerCase().includes(checkoutQuery.toLowerCase()) ||
+        a.sewadar?.sewadar_id.toLowerCase().includes(checkoutQuery.toLowerCase())
+      )
+    : [];
+
   const fetchAttendance = useCallback(async () => {
     setLoading(true);
     try {
@@ -230,69 +245,119 @@ export default function AttendancePage() {
   return (
     <DashboardLayout>
       <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in pb-20">
-        {/* Modern Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-indigo-100 rounded-xl text-indigo-600 shadow-inner group-hover:rotate-12 transition-transform">
-                <CalendarIcon size={22} />
-              </div>
-              <div>
-                <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase leading-none">Attendance Tracking</h1>
-                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100 w-max mt-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                  Live Attendance Log
-                </div>
+        {/* Header — Two Search Bars */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-indigo-100 rounded-xl text-indigo-600">
+              <CalendarIcon size={20} />
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-gray-900 tracking-tight uppercase leading-none">Attendance Tracking</h1>
+              <div className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest text-gray-400 mt-0.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                Live Attendance Log
               </div>
             </div>
           </div>
-          
+
           {canMarkAttendance && (
-            <div className="relative group w-full lg:w-[420px]">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
-              <input 
-                type="text" 
-                placeholder="Search by Name or ID for Check-in..." 
-                className="w-full bg-white border-2 border-gray-200 focus:border-indigo-600 rounded-2xl pl-12 pr-4 py-3 text-gray-900 font-bold placeholder:text-gray-300 transition-all shadow-sm outline-none text-xs"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              
-              {(isSearching || searchResults.length > 0) && (
-                <div className="absolute top-full left-0 right-0 mt-4 bg-white/95 backdrop-blur-2xl border border-gray-100 rounded-[2.5rem] shadow-[0_32px_128px_-16px_rgba(0,0,0,0.1)] z-50 overflow-hidden animate-in zoom-in-95 duration-200">
-                  {isSearching ? (
-                    <div className="p-16 flex flex-col items-center justify-center text-indigo-600 gap-3">
-                       <Loader2 className="animate-spin" size={32} />
-                       <span className="text-[10px] font-black uppercase tracking-[0.3em] opacity-50 pulse">Loading Records...</span>
-                    </div>
-                  ) : (
-                    <div className="p-3 space-y-1 max-h-[480px] overflow-y-auto custom-scrollbar">
-                      {searchResults.map((sw) => (
-                        <button
-                          key={sw.id}
-                          onClick={() => handleCheckIn(sw)}
-                          className="w-full flex items-center justify-between p-5 hover:bg-gradient-to-r hover:from-indigo-50/50 hover:to-white rounded-[1.8rem] transition-all group/item border border-transparent hover:border-indigo-100/50"
-                        >
-                          <div className="flex items-center gap-4 text-left">
-                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-700 font-black text-sm shadow-inner transition-transform group-hover/item:scale-110">
-                               {sw.name[0]}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Check-in Search */}
+              <div className="relative group">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
+                  <UserCheck size={16} className="text-indigo-500" />
+                  <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest hidden sm:block">Check-In</span>
+                </div>
+                <input 
+                  type="text" 
+                  placeholder="Search sewadar to check in..." 
+                  className="w-full bg-white border-2 border-gray-200 focus:border-indigo-600 rounded-2xl pl-24 pr-4 py-3 text-gray-900 font-bold placeholder:text-gray-300 transition-all shadow-sm outline-none text-xs"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                {(isSearching || searchResults.length > 0) && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in zoom-in-95 duration-200">
+                    {isSearching ? (
+                      <div className="p-8 flex items-center justify-center text-indigo-600 gap-3">
+                        <Loader2 className="animate-spin" size={20} />
+                        <span className="text-[10px] font-black uppercase tracking-widest">Searching...</span>
+                      </div>
+                    ) : (
+                      <div className="p-2 space-y-1 max-h-72 overflow-y-auto">
+                        {searchResults.map((sw) => (
+                          <button
+                            key={sw.id}
+                            onClick={() => handleCheckIn(sw)}
+                            className="w-full flex items-center justify-between px-4 py-3 hover:bg-indigo-50 rounded-xl transition-all group/item text-left"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-700 font-black text-sm group-hover/item:bg-indigo-600 group-hover/item:text-white transition-all">
+                                {sw.name[0]}
+                              </div>
+                              <div>
+                                <p className="font-black text-gray-900 text-sm tracking-tight group-hover/item:text-indigo-700">{sw.name}</p>
+                                <p className="text-[9px] text-gray-400 font-black tracking-widest uppercase">
+                                  {sw.sewadar_id} • {sw.department?.name || 'General'}
+                                </p>
+                              </div>
                             </div>
-                            <div className="space-y-0.5">
-                               <p className="font-black text-gray-900 text-lg tracking-tight group-hover/item:text-indigo-700">{sw.name}</p>
-                               <p className="text-[10px] text-gray-400 font-black tracking-widest uppercase">
-                                 ID: {sw.sewadar_id} • {sw.department?.name || 'Central Department'}
-                               </p>
+                            <UserCheck size={16} className="text-indigo-400 group-hover/item:text-indigo-600" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Check-out Search */}
+              <div className="relative group">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
+                  <UserMinus size={16} className="text-red-400" />
+                  <span className="text-[9px] font-black text-red-400 uppercase tracking-widest hidden sm:block">Check-Out</span>
+                </div>
+                <input 
+                  type="text" 
+                  placeholder="Search active sewadar to check out..." 
+                  className="w-full bg-white border-2 border-gray-200 focus:border-red-400 rounded-2xl pl-28 pr-4 py-3 text-gray-900 font-bold placeholder:text-gray-300 transition-all shadow-sm outline-none text-xs"
+                  value={checkoutQuery}
+                  onChange={(e) => setCheckoutQuery(e.target.value)}
+                />
+                {filteredCheckoutResults.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden animate-in zoom-in-95 duration-200">
+                    <div className="p-2 space-y-1 max-h-72 overflow-y-auto">
+                      {filteredCheckoutResults.map((record) => (
+                        <button
+                          key={record.id}
+                          onClick={() => { handleCheckOut(record.id); setCheckoutQuery(''); }}
+                          className="w-full flex items-center justify-between px-4 py-3 hover:bg-red-50 rounded-xl transition-all group/item text-left"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-red-50 flex items-center justify-center text-red-500 font-black text-sm group-hover/item:bg-red-500 group-hover/item:text-white transition-all">
+                              {record.sewadar?.name[0]}
+                            </div>
+                            <div>
+                              <p className="font-black text-gray-900 text-sm tracking-tight group-hover/item:text-red-600">{record.sewadar?.name}</p>
+                              <p className="text-[9px] text-gray-400 font-black tracking-widest uppercase">
+                                {record.sewadar?.sewadar_id} • In: {formatTime(record.check_in)}
+                              </p>
                             </div>
                           </div>
-                          <div className="p-3 bg-gray-50 rounded-2xl group-hover/item:bg-indigo-600 group-hover/item:text-white transition-all shadow-sm">
-                             <UserCheck size={20} />
+                          <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-600 text-white rounded-lg text-[9px] font-black uppercase tracking-widest">
+                            <UserMinus size={12} />
+                            Out
                           </div>
                         </button>
                       ))}
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                )}
+                {checkoutQuery.trim() && filteredCheckoutResults.length === 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 p-4 text-center">
+                    <p className="text-xs font-black text-gray-400 uppercase">No active sewadars found</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -413,7 +478,30 @@ export default function AttendancePage() {
         </div>
 
         {/* Data Grid Section */}
-        {loading ? (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h2 className="text-lg font-black text-gray-900 uppercase tracking-tight w-full sm:w-auto">Daily Log</h2>
+            <div className="relative w-full sm:w-72 group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={16} />
+              <input 
+                type="text" 
+                placeholder="Search Check-ins..." 
+                className="w-full bg-white border-2 border-gray-100 focus:border-indigo-600 rounded-xl pl-10 pr-4 py-2 text-sm font-bold text-gray-900 placeholder:text-gray-300 transition-all shadow-sm outline-none"
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+              />
+              {tableSearch && (
+                <button 
+                  onClick={() => setTableSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full text-gray-400 transition-all"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {loading ? (
           <div className="group/table relative animate-pulse">
              <div className="card relative bg-white/50 backdrop-blur-3xl border-none shadow-sm overflow-hidden rounded-[3rem]">
                <div className="p-12 space-y-8">
@@ -452,7 +540,13 @@ export default function AttendancePage() {
                     </tr>
                    </thead>
                    <tbody className="divide-y divide-gray-50/50">
-                     {attendance.map((record) => (
+                     {attendance
+                        .filter(record => 
+                          !tableSearch || 
+                          record.sewadar?.name.toLowerCase().includes(tableSearch.toLowerCase()) ||
+                          record.sewadar?.sewadar_id.toLowerCase().includes(tableSearch.toLowerCase())
+                        )
+                        .map((record) => (
                        <tr key={record.id} className="group hover:bg-white hover:shadow-2xl hover:shadow-indigo-100/30 transition-all duration-500">                        <td className="px-6 py-2">
                             <div className="flex items-center gap-3">
                                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center text-indigo-700 font-bold text-xs shadow-sm group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
@@ -538,10 +632,11 @@ export default function AttendancePage() {
                       <p className="text-gray-300 text-sm italic font-medium max-w-xs mx-auto">No attendance has been recorded for this date yet.</p>
                     </div>
                  </div>
-               )}
-             </div>
-          </div>
-        )}
+                )}
+              </div>
+           </div>
+         )}
+       </div>
         {/* Edit Attendance Modal */}
         {isEditModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-gray-900/80 backdrop-blur-xl animate-in fade-in duration-300">
