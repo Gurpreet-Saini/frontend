@@ -86,7 +86,7 @@ export default function UsersPage() {
           toast.error('Password is required for new users');
           return;
         }
-        await createUser({ ...payload, password_hash: formData.password });
+        await createUser({ ...payload, password: formData.password });
         toast.success('User created');
       }
       
