@@ -102,77 +102,51 @@ export default function CentersPage() {
   return (
     <DashboardLayout>
       <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in pb-20">
-        {/* Elite Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-4">
-              <div className="p-2.5 bg-indigo-600 rounded-2xl text-white shadow-xl shadow-indigo-100 group-hover:rotate-6 transition-transform">
-                <Globe size={24} />
-              </div>
-              <div>
-                <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase leading-none">Centers</h1>
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="flex items-center gap-2 bg-green-50 px-3 py-1 rounded-full border border-green-100">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]" />
-                    <span className="text-[10px] font-black text-green-700 uppercase tracking-widest">{centers.length} Active Centers</span>
-                  </div>
-                </div>
-              </div>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg">
+              <Globe size={20} />
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-gray-900 uppercase tracking-tight">Centers</h1>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{centers.length} active centers</p>
             </div>
           </div>
           <button 
             onClick={openCreate} 
-            className="group relative px-6 py-3.5 bg-gray-900 text-white rounded-xl overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-xl"
+            className="h-10 px-5 bg-gray-900 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 shadow-lg"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-800 translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
-            <div className="relative flex items-center gap-3">
-              <Plus size={22} className="group-hover:rotate-180 transition-transform duration-500" />
-              <span className="text-xs font-black uppercase tracking-[0.2em]">Add Center</span>
-            </div>
+            <Plus size={16} />
+            <span>Add Center</span>
           </button>
         </div>
 
-        {/* Search & Filters */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-3 card p-2 bg-white/80 backdrop-blur-xl flex items-center shadow-[0_16px_32px_-8px_rgba(0,0,0,0.05)] border-white border-2 rounded-2xl">
-             <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
-                <input 
-                  type="text" 
-                  placeholder="Search centers..." 
-                  className="w-full bg-transparent border-none focus:ring-0 pl-12 pr-6 py-3 text-gray-900 font-bold placeholder:text-gray-300 text-sm uppercase tracking-tight"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-             </div>
-          </div>
-          <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900 to-black rounded-2xl p-5 text-white shadow-2xl flex items-center justify-between group">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full translate-x-12 -translate-y-12 group-hover:scale-150 transition-transform duration-1000" />
-             <div className="relative z-10 space-y-1">
-                <p className="text-[9px] font-black text-indigo-400 uppercase tracking-[0.3em]">System Health</p>
-                <div className="flex items-baseline gap-2">
-                   <p className="text-3xl font-black tracking-tighter">100%</p>
-                   <span className="text-[10px] font-bold text-gray-500">Uptime</span>
-                </div>
-             </div>
-             <Activity className="relative z-10 text-indigo-500 group-hover:scale-110 transition-transform" size={32} />
-          </div>
+        {/* Search */}
+        <div className="card p-2 bg-white flex items-center shadow-sm border-gray-100 rounded-2xl">
+           <div className="relative flex-1">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <input 
+                type="text" 
+                placeholder="Search centers by name or location..." 
+                className="w-full h-10 bg-transparent border-none focus:ring-0 pl-10 pr-4 text-gray-900 font-bold placeholder:text-gray-300 text-sm"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+           </div>
         </div>
 
         {/* Centers List */}
-        <div className="group/table relative">
-          <div className="absolute -inset-1 bg-gradient-to-b from-indigo-50 via-transparent to-indigo-50 rounded-[3.5rem] blur-2xl opacity-0 group-hover/table:opacity-100 transition-opacity" />
-          <div className="card relative bg-white/70 backdrop-blur-3xl border-none shadow-[0_32px_128px_-32px_rgba(0,0,0,0.08)] overflow-hidden rounded-[3rem]">
-            {loading ? (
-              <div className="p-32 flex flex-col items-center justify-center gap-8 opacity-40">
-                <div className="w-20 h-20 border-8 border-gray-100 border-t-indigo-600 rounded-full animate-spin shadow-inner" />
-                <div className="space-y-1 text-center">
-                   <p className="text-sm font-black uppercase tracking-[0.4em] animate-pulse">Loading Centers...</p>
-                   <p className="text-[10px] font-medium italic">Fetching center information from the system.</p>
-                </div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto custom-scrollbar">
+        <div className="card bg-white border border-gray-100 shadow-sm overflow-hidden rounded-3xl">
+          {loading ? (
+            <div className="p-20 flex flex-col items-center gap-6 text-gray-400">
+              <div className="w-12 h-12 border-4 border-gray-100 border-t-indigo-600 rounded-full animate-spin" />
+              <p className="text-sm font-bold uppercase tracking-widest">Loading Centers...</p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop table */}
+              <div className="overflow-x-auto hidden md:block">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-white/50 border-b border-gray-100">
@@ -184,75 +158,74 @@ export default function CentersPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-50/50">
                     {filteredCenters.map(center => (
-                      <tr key={center.id} className="group hover:bg-white hover:shadow-xl transition-all duration-300">
+                      <tr key={center.id} className="group hover:bg-gray-50 transition-all">
                         <td className="px-6 py-4">
-                          <span className="inline-flex items-center px-3 py-1.5 bg-gray-900 text-white text-[9px] font-black tracking-[0.2em] rounded-lg shadow-md group-hover:bg-indigo-600 transition-colors">
+                          <span className="inline-flex items-center px-2.5 py-1 bg-gray-900 text-white text-[9px] font-black tracking-widest rounded-lg shadow-sm">
                             ID-{center.id.toString().padStart(3, '0')}
                           </span>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 flex items-center justify-center text-indigo-700 font-extrabold shadow-sm transition-all duration-300">
-                               <Building size={20} />
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                               <Building size={16} />
                             </div>
-                            <div>
-                              <p className="text-base font-black text-gray-900 tracking-tighter group-hover:text-indigo-700 transition-colors uppercase leading-none">{center.name}</p>
-                              <div className="flex items-center gap-1.5 mt-1.5">
-                                 <div className="w-1 h-1 rounded-full bg-indigo-400" />
-                                 <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest leading-none">Center</p>
-                              </div>
-                            </div>
+                            <p className="text-sm font-black text-gray-900 uppercase">{center.name}</p>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-2.5 group/loc">
-                            <div className="p-2 bg-indigo-50 rounded-lg text-indigo-500 group-hover/loc:bg-indigo-600 group-hover/loc:text-white transition-all shadow-inner">
-                               <MapPin size={16} />
-                            </div>
-                            <span className="text-sm font-black text-gray-600 tracking-tight uppercase group-hover/loc:text-gray-900 transition-colors">{center.location}</span>
+                          <div className="flex items-center gap-2">
+                            <MapPin size={14} className="text-indigo-400" />
+                            <span className="text-sm font-bold text-gray-600 uppercase">{center.location}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                            <button 
-                              onClick={() => openEdit(center)} 
-                              className="p-2.5 bg-white text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl shadow-sm border border-gray-100 hover:border-indigo-600 transition-all active:scale-95"
-                              title="Edit Details"
-                            >
-                              <Pencil size={18} />
-                            </button>
-                            <button 
-                              onClick={() => handleDelete(center.id)} 
-                              className="p-2.5 bg-white text-red-500 hover:bg-red-600 hover:text-white rounded-xl shadow-sm border border-gray-100 hover:border-red-600 transition-all active:scale-95"
-                              title="Delete Center"
-                            >
-                              <Trash2 size={18} />
-                            </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button onClick={() => openEdit(center)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all active:scale-90"><Pencil size={15} /></button>
+                            <button onClick={() => handleDelete(center.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all active:scale-90"><Trash2 size={15} /></button>
                           </div>
                         </td>
                       </tr>
                     ))}
                     {filteredCenters.length === 0 && (
                       <tr>
-                        <td colSpan={4} className="py-48 text-center">
-                           <div className="flex flex-col items-center justify-center gap-8 relative overflow-hidden">
-                             <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/20 to-transparent pointer-events-none" />
-                             <div className="w-32 h-32 bg-gray-50 rounded-[3rem] flex items-center justify-center text-gray-100 border-4 border-white shadow-2xl relative z-10">
-                                <Search size={64} />
-                             </div>
-                             <div className="space-y-2 relative z-10 text-center">
-                               <p className="text-2xl font-black text-gray-400 capitalize tracking-tight">No Centers Found</p>
-                                 <p className="text-gray-300 text-sm italic font-medium max-w-xs mx-auto">No centers match your current search.</p>
-                             </div>
-                           </div>
+                        <td colSpan={4} className="py-20 text-center">
+                          <Search size={36} className="text-gray-200 mx-auto mb-3" />
+                          <p className="text-sm font-black text-gray-400 uppercase">No Centers Found</p>
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
               </div>
-            )}
-          </div>
+
+              {/* Mobile card list */}
+              <div className="md:hidden divide-y divide-gray-50">
+                {filteredCenters.map(center => (
+                  <div key={center.id} className="p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0">
+                      <Building size={18} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-gray-900 uppercase truncate">{center.name}</p>
+                      <p className="text-xs text-gray-400 font-medium truncate flex items-center gap-1">
+                        <MapPin size={10} /> {center.location}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button onClick={() => openEdit(center)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"><Pencil size={14} /></button>
+                      <button onClick={() => handleDelete(center.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={14} /></button>
+                    </div>
+                  </div>
+                ))}
+                {filteredCenters.length === 0 && (
+                  <div className="py-16 text-center">
+                    <Search size={36} className="text-gray-200 mx-auto mb-3" />
+                    <p className="text-sm font-black text-gray-400 uppercase">No Centers Found</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Information */}
@@ -269,9 +242,9 @@ export default function CentersPage() {
 
         {/* Center Details Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
-            <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-xl" onClick={() => setIsModalOpen(false)} />
-            <div className="relative bg-white rounded-[2.5rem] w-full max-w-xl shadow-[0_64px_256px_-64px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-500">
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-6 animate-in fade-in duration-300">
+            <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
+            <div className="relative bg-white w-full sm:rounded-[2.5rem] rounded-t-[2.5rem] sm:max-w-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
               {/* Modal Header */}
               <div className="bg-gradient-to-r from-gray-900 to-indigo-950 p-6 text-white relative overflow-hidden">
                  <div className="absolute right-0 top-0 w-48 h-48 bg-indigo-600/20 rounded-full translate-x-12 -translate-y-12 blur-3xl" />

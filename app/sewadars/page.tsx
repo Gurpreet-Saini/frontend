@@ -297,109 +297,96 @@ export default function SewadarsPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 max-w-[1600px] mx-auto space-y-6 animate-fade-in pb-20">
-        {/* Premium Header */}
-        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-8">
-          <div className="space-y-2">
-            <div className="flex items-center gap-4">
+      <div className="max-w-[1600px] mx-auto space-y-4 md:space-y-6 pb-20">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
               <div className="p-3 bg-indigo-600 rounded-2xl text-white shadow-xl shadow-indigo-100 -rotate-2 hover:rotate-0 transition-transform duration-500">
                 <Users size={24} />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase leading-none">Sewadar Management</h1>
-                <div className="flex items-center gap-3 mt-1.5">
-                   <div className="flex -space-x-2">
-                      {[1,2,3].map(i => (
-                        <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-[8px] font-black text-indigo-400">
-                          {String.fromCharCode(64 + i)}
-                        </div>
-                      ))}
-                   </div>
-                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
-                     {sewadars.length} Active Records
-                   </p>
-                </div>
+                <h1 className="text-xl md:text-2xl font-black text-gray-900 tracking-tighter uppercase leading-none">Sewadar Management</h1>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-1">{sewadars.length} Active Records</p>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 w-full xl:w-auto">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <button 
               onClick={handleExport} 
-              className="flex-1 lg:flex-none h-11 px-5 bg-white hover:bg-gray-50 border-2 border-gray-100 rounded-xl text-[11px] font-black text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
+              className="flex-1 sm:flex-none h-10 px-4 bg-white hover:bg-gray-50 border-2 border-gray-100 rounded-xl text-[11px] font-black text-gray-700 shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              <Download size={16} className="text-indigo-400" /> 
-              <span>Export Excel</span>
+              <Download size={15} className="text-indigo-400" /> 
+              <span>Export</span>
             </button>
             <button 
               onClick={() => openModal('upload')} 
-              className="flex-1 lg:flex-none h-11 px-5 bg-white hover:bg-gray-50 border-2 border-gray-100 rounded-xl text-[11px] font-black text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
+              className="flex-1 sm:flex-none h-10 px-4 bg-white hover:bg-gray-50 border-2 border-gray-100 rounded-xl text-[11px] font-black text-gray-700 shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              <Upload size={16} className="text-indigo-400" /> 
-              <span>Import Excel</span>
+              <Upload size={15} className="text-indigo-400" /> 
+              <span>Import</span>
             </button>
             <button 
               onClick={() => openModal('add')} 
-              className="w-full lg:w-auto h-11 px-6 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-[11px] font-black text-white shadow-lg shadow-indigo-100 transition-all hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2"
+              className="flex-1 sm:flex-none h-10 px-5 bg-indigo-600 hover:bg-indigo-700 rounded-xl text-[11px] font-black text-white shadow-lg shadow-indigo-100 transition-all active:scale-95 flex items-center justify-center gap-2"
             >
-              <Plus size={18} /> 
-              <span>Add New Sewadar</span>
+              <Plus size={16} /> 
+              <span>Add Sewadar</span>
             </button>
           </div>
         </div>
 
-        {/* Dynamic Filter Engine */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-           <div className="lg:col-span-6 relative group">
-              <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={24} />
+        {/* Filter Bar */}
+        <div className="flex flex-col sm:flex-row gap-3">
+           <div className="relative flex-1 group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-600 transition-colors" size={18} />
               <input 
                 type="text" 
-                placeholder="Search by Name, ID, or Keywords..." 
-                className="w-full h-20 bg-white border-2 border-gray-100 focus:border-indigo-600 rounded-[2.5rem] pl-16 pr-8 text-lg font-bold text-gray-900 placeholder:text-gray-300 transition-all shadow-sm outline-none"
+                placeholder="Search by Name or ID..." 
+                className="w-full h-11 bg-white border-2 border-gray-100 focus:border-indigo-600 rounded-2xl pl-11 pr-4 text-sm font-bold text-gray-900 placeholder:text-gray-300 transition-all shadow-sm outline-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
               {search && (
                 <button 
                   onClick={() => setSearch('')}
-                  className="absolute right-6 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-full text-gray-400 transition-all"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded-full text-gray-400 transition-all"
                 >
-                  <X size={20} />
+                  <X size={14} />
                 </button>
               )}
            </div>
 
-           <div className="lg:col-span-3 card p-2 bg-white flex items-center shadow-sm border-gray-100 rounded-[2rem] h-20">
-              <Building2 className="ml-5 text-indigo-400" size={20} />
+           <div className="card p-2 bg-white flex items-center shadow-sm border-gray-100 rounded-2xl h-11 min-w-0">
+              <Building2 className="ml-3 text-indigo-400 shrink-0" size={16} />
               <select
-                className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-gray-700 font-black text-base appearance-none cursor-pointer"
+                className="w-full bg-transparent border-none focus:ring-0 pl-2 pr-2 py-1.5 text-gray-700 font-bold text-sm appearance-none cursor-pointer min-w-0"
                 value={centerFilter}
                 onChange={(e) => { setCenterFilter(e.target.value); setDeptFilter(''); }}
               >
-                <option value="">ALL CENTERS</option>
+                <option value="">All Centers</option>
                 {centers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
            </div>
 
-           <div className="lg:col-span-3 card p-2 bg-white flex items-center shadow-sm border-gray-100 rounded-[2rem] h-20">
-              <Filter className="ml-5 text-indigo-400" size={20} />
+           <div className="card p-2 bg-white flex items-center shadow-sm border-gray-100 rounded-2xl h-11 min-w-0">
+              <Filter className="ml-3 text-indigo-400 shrink-0" size={16} />
               <select
-                className="w-full bg-transparent border-none focus:ring-0 px-4 py-3 text-gray-700 font-black text-base appearance-none cursor-pointer"
+                className="w-full bg-transparent border-none focus:ring-0 pl-2 pr-2 py-1.5 text-gray-700 font-bold text-sm appearance-none cursor-pointer min-w-0"
                 value={deptFilter}
                 onChange={(e) => setDeptFilter(e.target.value)}
               >
-                <option value="">ALL DEPARTMENTS</option>
+                <option value="">All Departments</option>
                 {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
               </select>
            </div>
         </div>
 
-        {/* Master Data View */}
-        <div className="relative group/view">
-          <div className="absolute -inset-2 bg-gradient-to-r from-indigo-50 via-white to-indigo-50 rounded-[4rem] blur-3xl opacity-0 group-hover/view:opacity-100 transition-opacity duration-1000" />
-          <div className="card relative bg-white/70 backdrop-blur-3xl border-none shadow-[0_32px_128px_-32px_rgba(0,0,0,0.08)] overflow-hidden rounded-[3.5rem]">
-            <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full border-collapse">
+        {/* Data View */}
+        <div className="card bg-white border border-gray-100 shadow-sm overflow-hidden rounded-3xl">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse hidden md:table">
                 <thead>
                   <tr className="bg-gray-50/30 border-b border-gray-100">
                     <th className="px-4 py-4 w-10">
@@ -535,9 +522,47 @@ export default function SewadarsPage() {
                    )}
                  </tbody>
                </table>
+
+               {/* Mobile card list */}
+               <div className="md:hidden divide-y divide-gray-50">
+                 {loading ? (
+                   <div className="py-16 flex flex-col items-center gap-4 text-gray-400">
+                     <div className="w-10 h-10 border-4 border-gray-100 border-t-indigo-600 rounded-full animate-spin" />
+                     <p className="text-sm font-bold">Loading...</p>
+                   </div>
+                 ) : sewadars.length > 0 ? sewadars.map((sw) => (
+                   <div key={sw.id} className={`p-4 flex items-center gap-3 ${selectedIds.has(sw.id) ? 'bg-indigo-50' : 'bg-white'}`}>
+                     <input
+                       type="checkbox"
+                       className="w-4 h-4 rounded border-gray-300 text-indigo-600 cursor-pointer flex-shrink-0"
+                       checked={selectedIds.has(sw.id)}
+                       onChange={() => toggleSelect(sw.id)}
+                     />
+                     <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-black text-sm flex-shrink-0">
+                       {sw.name[0]}
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <p className="text-sm font-black text-gray-900 uppercase truncate">{sw.name}</p>
+                       <p className="text-xs text-gray-400 font-medium truncate">
+                         {sw.department?.name || '—'} • <span className="text-indigo-500">{sw.sewadar_id}</span>
+                       </p>
+                     </div>
+                     <div className="flex items-center gap-1.5 flex-shrink-0">
+                       <button onClick={() => openModal('transfer', sw)} className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"><MoveHorizontal size={15} /></button>
+                       <button onClick={() => openModal('edit', sw)} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"><Edit2 size={15} /></button>
+                       <button onClick={() => handleDeleteRequest(sw.id)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={15} /></button>
+                     </div>
+                   </div>
+                 )) : (
+                   <div className="py-20 text-center">
+                     <Users size={40} className="text-gray-200 mx-auto mb-3" />
+                     <p className="text-base font-black text-gray-400 uppercase">No Records Found</p>
+                   </div>
+                 )}
+               </div>
             </div>
-            {/* Pagination Bar — always visible */}
-            <div className="px-6 py-4 bg-gray-50/50 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
+            {/* Pagination Bar */}
+            <div className="px-4 py-3 bg-gray-50/50 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
               {/* Left: per-page selector + record summary */}
               <div className="flex items-center gap-3">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Show</span>
@@ -595,7 +620,6 @@ export default function SewadarsPage() {
               )}
             </div>
           </div>
-        </div>
 
         {/* Floating Bulk Action Bar */}
         {selectedIds.size > 0 && (
@@ -652,10 +676,11 @@ export default function SewadarsPage() {
           </div>
         )}
 
-        {/* Enhanced Modal Engine */}
+        {/* Modal Engine */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300 overflow-y-auto">
-            <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-2xl" onClick={() => setIsModalOpen(false)} />            <div className={`relative bg-white/95 backdrop-blur-xl rounded-[2.5rem] shadow-[0_64px_256px_-64px_rgba(0,0,0,0.3)] w-full overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-8 duration-500 pb-6 ${modalType === 'transfer' ? 'max-w-lg' : 'max-w-xl'}`}>
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-6 animate-in fade-in duration-300">
+            <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
+            <div className={`relative bg-white w-full sm:rounded-[2.5rem] rounded-t-[2.5rem] shadow-[0_-32px_128px_-32px_rgba(0,0,0,0.15)] sm:shadow-[0_64px_256px_-64px_rgba(0,0,0,0.3)] overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 sm:slide-in-from-bottom-0 duration-300 pb-safe ${modalType === 'transfer' ? 'sm:max-w-lg' : 'sm:max-w-xl'}`}>`
               {/* Modal Header */}
               <div className="bg-gradient-to-r from-indigo-600 to-indigo-900 p-5 text-white relative overflow-hidden">
                  <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />

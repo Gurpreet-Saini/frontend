@@ -141,32 +141,22 @@ export default function UsersPage() {
     <DashboardLayout>
       <div className="p-6 max-w-7xl mx-auto space-y-6 animate-fade-in pb-20">
         {/* Elite Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-4">
-              <div className="p-2.5 bg-indigo-600 rounded-2xl text-white shadow-xl shadow-indigo-100 group-hover:rotate-6 transition-transform">
-                <UserCog size={24} />
-              </div>
-              <div>
-                <h1 className="text-2xl font-black text-gray-900 tracking-tighter uppercase leading-none">User Management</h1>
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="flex items-center gap-2 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
-                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse shadow-[0_0_8px_rgba(79,70,229,0.5)]" />
-                    <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">{users.length} Total Users</span>
-                  </div>
-                </div>
-              </div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-lg">
+              <UserCog size={20} />
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-gray-900 uppercase tracking-tight">User Management</h1>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{users.length} accounts</p>
             </div>
           </div>
           <button 
             onClick={openCreate} 
-            className="group relative px-6 py-3.5 bg-gray-900 text-white rounded-xl overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-xl"
+            className="h-10 px-5 bg-gray-900 hover:bg-indigo-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2 shadow-lg"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-indigo-800 translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
-            <div className="relative flex items-center gap-3">
-              <Plus size={22} className="group-hover:rotate-180 transition-transform duration-500" />
-              <span className="text-xs font-black uppercase tracking-[0.2em]">Add User</span>
-            </div>
+            <Plus size={16} />
+            <span>Add User</span>
           </button>
         </div>
 
@@ -184,19 +174,16 @@ export default function UsersPage() {
         </div>
 
         {/* User List */}
-        <div className="group/table relative">
-          <div className="absolute -inset-1 bg-gradient-to-b from-indigo-50 via-transparent to-indigo-50 rounded-[3.5rem] blur-2xl opacity-0 group-hover/table:opacity-100 transition-opacity" />
-          <div className="card relative bg-white/70 backdrop-blur-3xl border-none shadow-[0_32px_128px_-32px_rgba(0,0,0,0.08)] overflow-hidden rounded-[3rem]">
-            {loading ? (
-              <div className="p-32 flex flex-col items-center justify-center gap-8 opacity-40">
-                <div className="w-20 h-20 border-8 border-gray-100 border-t-indigo-600 rounded-full animate-spin shadow-inner" />
-                <div className="space-y-1 text-center">
-                   <p className="text-sm font-black uppercase tracking-[0.4em] animate-pulse">Loading Users...</p>
-                   <p className="text-[10px] font-medium italic">Connecting to authentication system.</p>
-                </div>
-              </div>
-            ) : (
-              <div className="overflow-x-auto custom-scrollbar">
+        <div className="card bg-white border border-gray-100 shadow-sm overflow-hidden rounded-3xl">
+          {loading ? (
+            <div className="p-20 flex flex-col items-center gap-6 text-gray-400">
+              <div className="w-12 h-12 border-4 border-gray-100 border-t-indigo-600 rounded-full animate-spin" />
+              <p className="text-sm font-bold uppercase tracking-widest">Loading Users...</p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop table */}
+              <div className="overflow-x-auto hidden md:block">
                 <table className="w-full border-collapse text-left">
                   <thead>
                     <tr className="bg-white/50 border-b border-gray-100">
@@ -204,53 +191,36 @@ export default function UsersPage() {
                       <th className="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-[0.3em]">Role</th>
                       <th className="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-[0.3em]">Center</th>
                       <th className="px-6 py-4 text-[9px] font-black text-gray-400 uppercase tracking-[0.3em]">Department</th>
-                      <th className="px-6 py-4 text-center text-[9px] font-black text-gray-400 uppercase tracking-[0.3em]">Status</th>
                       {isSuperAdmin && <th className="px-6 py-4 text-right text-[9px] font-black text-gray-400 uppercase tracking-[0.3em]">Actions</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50/50">
                     {users.map(u => (
-                      <tr key={u.id} className="group hover:bg-white hover:shadow-xl transition-all duration-300">
+                      <tr key={u.id} className="group hover:bg-gray-50 transition-all">
                         <td className="px-6 py-4">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-50 to-white flex items-center justify-center text-indigo-700 font-black text-base shadow-inner group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-700 font-black shadow-inner">
                                {u.username[0].toUpperCase()}
                             </div>
-                            <span className="text-base font-black text-gray-900 tracking-tighter uppercase group-hover:text-indigo-700 transition-colors">{u.username}</span>
+                            <span className="text-sm font-black text-gray-900 uppercase">{u.username}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
-                            u.role === 'super_admin' ? 'bg-indigo-600 text-white shadow-md' :
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest ${
+                            u.role === 'super_admin' ? 'bg-indigo-600 text-white' :
                             u.role === 'center_admin' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' :
                             'bg-gray-50 text-gray-400 border border-gray-100'
                           }`}>
                             {u.role.replace('_', ' ')}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
-                           <div className="flex items-center gap-2">
-                              <div className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                              <span className="text-xs font-black text-gray-600 uppercase tracking-tight">{u.center?.name || 'RSSB HQ'}</span>
-                           </div>
-                        </td>
-                        <td className="px-6 py-4 text-xs font-black text-gray-400 uppercase tracking-widest">
-                          {u.department?.name || 'All Departments'}
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <div className="inline-flex items-center gap-2 px-2 py-1 bg-green-50 text-green-600 rounded text-[9px] font-black uppercase tracking-widest border border-green-100">
-                             Active
-                          </div>
-                        </td>
+                        <td className="px-6 py-4 text-xs font-bold text-gray-600">{u.center?.name || 'RSSB HQ'}</td>
+                        <td className="px-6 py-4 text-xs font-bold text-gray-400">{u.department?.name || 'All Departments'}</td>
                         {isSuperAdmin && (
                           <td className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-2">
-                              <button onClick={() => openEdit(u)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
-                                <Edit size={16} />
-                              </button>
-                              <button onClick={() => handleDelete(u.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                                <Trash2 size={16} />
-                              </button>
+                              <button onClick={() => openEdit(u)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"><Edit size={15} /></button>
+                              <button onClick={() => handleDelete(u.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={15} /></button>
                             </div>
                           </td>
                         )}
@@ -259,15 +229,48 @@ export default function UsersPage() {
                   </tbody>
                 </table>
               </div>
-            )}
-          </div>
+
+              {/* Mobile card list */}
+              <div className="md:hidden divide-y divide-gray-50">
+                {users.map(u => (
+                  <div key={u.id} className="p-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-700 font-black text-sm flex-shrink-0">
+                      {u.username[0].toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-black text-gray-900 uppercase truncate">{u.username}</p>
+                      <p className="text-xs text-gray-400 font-medium truncate">
+                        <span className={`inline-block mr-1.5 px-1.5 py-0.5 rounded text-[9px] font-black uppercase ${
+                          u.role === 'super_admin' ? 'bg-indigo-600 text-white' :
+                          u.role === 'center_admin' ? 'bg-indigo-50 text-indigo-600' : 'bg-gray-100 text-gray-400'
+                        }`}>{u.role.replace('_', ' ')}</span>
+                        {u.center?.name || 'HQ'}
+                      </p>
+                    </div>
+                    {isSuperAdmin && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button onClick={() => openEdit(u)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"><Edit size={14} /></button>
+                        <button onClick={() => handleDelete(u.id)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"><Trash2 size={14} /></button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {users.length === 0 && (
+                  <div className="py-16 text-center">
+                    <UserCog size={36} className="text-gray-200 mx-auto mb-3" />
+                    <p className="text-sm font-black text-gray-400 uppercase">No Users Found</p>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* User Account Details Modal */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-in fade-in duration-300">
-            <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-xl" onClick={() => setIsModalOpen(false)} />
-            <div className="relative bg-white rounded-[2.5rem] w-full max-w-xl shadow-[0_64px_256px_-64px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-500">
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-6 animate-in fade-in duration-300">
+            <div className="fixed inset-0 bg-gray-900/50 backdrop-blur-md" onClick={() => setIsModalOpen(false)} />
+            <div className="relative bg-white w-full sm:rounded-[2.5rem] rounded-t-[2.5rem] sm:max-w-xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-300">
               {/* Modal Header */}
               <div className="bg-gradient-to-r from-gray-900 to-indigo-950 p-6 text-white relative overflow-hidden">
                  <div className="absolute right-0 top-0 w-48 h-48 bg-indigo-600/20 rounded-full translate-x-12 -translate-y-12 blur-3xl" />
