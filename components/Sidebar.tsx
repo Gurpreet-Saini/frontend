@@ -13,6 +13,7 @@ import {
   LogOut, 
   LayoutDashboard,
   MessageSquare,
+  Package,
   X
 } from 'lucide-react';
 import Image from 'next/image';
@@ -42,6 +43,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { name: 'Sewadars', href: '/sewadars', icon: Users, show: isAdmin },
     { name: 'Attendance', href: '/attendance', icon: UserCheck, show: canMarkAttendance },
     { name: 'Departments', href: '/departments', icon: Building2 },
+    { name: 'Inventory', href: '/dashboard/inventory', icon: Package },
     { name: 'Feedback', href: '/dashboard/feedback', icon: MessageSquare, show: isSuperAdmin },
   ];
 
@@ -69,7 +71,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         <div className="p-5 border-b border-gray-100 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-[#7a0000] shadow-md flex-shrink-0">
-              <Image src="/logo.svg" alt="RSSB Logo" width={40} height={40} className="object-cover" />
+              <Image src="/logo.svg" alt="RSSB Logo" width={40} height={40} className="object-cover" priority />
             </div>
             <div>
               <h2 className="text-lg font-bold text-gray-900 leading-none">RSSB</h2>

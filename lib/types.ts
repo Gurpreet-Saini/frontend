@@ -69,3 +69,29 @@ export interface Feedback {
   is_read: boolean;
   created_at: string;
 }
+
+export interface Item {
+  id: number;
+  name: string;
+  category: string;
+  description: string;
+  quantity: number;
+  unit: string;
+  center_id: number;
+  center?: Center;
+  department_id?: number;
+  department?: Department;
+  created_at: string;
+}
+
+export interface InventoryTransaction {
+  id: number;
+  item_id: number;
+  item?: Item;
+  quantity_changed: number;
+  transaction_type: 'ADD' | 'SUBTRACT' | 'SET';
+  remarks: string;
+  marked_by: number;
+  marked_by_user?: User;
+  created_at: string;
+}

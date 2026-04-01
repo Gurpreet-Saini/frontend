@@ -36,7 +36,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full animate-fade-in">
         <div className="text-center mb-8 flex flex-col items-center">
           <div className="inline-flex items-center justify-center w-24 h-24 rounded-2xl overflow-hidden bg-[#7a0000] shadow-xl shadow-red-900/20 mb-6 transition-transform hover:scale-105">
-            <Image src="/logo.svg" alt="RSSB Logo" width={96} height={96} className="object-cover" />
+            <Image src="/logo.svg" alt="RSSB Logo" width={96} height={96} className="object-cover" priority />
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Radha Soami Satsang Beas</h1>
           <p className="text-[#7a0000] font-semibold tracking-wide uppercase text-sm mt-3">Attendance Management</p>

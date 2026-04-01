@@ -103,3 +103,13 @@ export const markFeedbackAsRead = (id: number) =>
 
 export const deleteFeedback = (id: number) =>
   api.delete(`/api/feedback/${id}`);
+
+// ─── Inventory ────────────────────────────────────────────────────────────
+export const getInventoryItems = (params?: object) => api.get('/api/inventory', { params });
+export const getInventoryItem = (id: number) => api.get(`/api/inventory/${id}`);
+export const createInventoryItem = (data: object) => api.post('/api/inventory', data);
+export const updateInventoryItem = (id: number, data: object) => api.put(`/api/inventory/${id}`, data);
+export const deleteInventoryItem = (id: number) => api.delete(`/api/inventory/${id}`);
+export const updateInventoryStock = (id: number, data: { quantity_changed: number; transaction_type: string; remarks?: string }) =>
+  api.post(`/api/inventory/${id}/stock`, data);
+export const getInventoryTransactions = (id: number) => api.get(`/api/inventory/${id}/transactions`);
