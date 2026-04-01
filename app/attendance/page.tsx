@@ -26,11 +26,14 @@ import {
   Activity,
   Building2,
   RefreshCw,
-  X
+  X,
+  Camera
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { formatTime, formatDate } from '@/lib/utils';
 import debounce from 'lodash/debounce';
+import ScannerModal from '@/components/ScannerModal';
+import { useHardwareScanner } from '@/hooks/useHardwareScanner';
 
 export default function AttendancePage() {
   const { user, canMarkAttendance, isAdmin, isSuperAdmin, token } = useAuth();
@@ -62,6 +65,9 @@ export default function AttendancePage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<Attendance | null>(null);
   const [editFormData, setEditFormData] = useState({ check_in: '', check_out: '' });
+
+  // Scanner state
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   // Table search state
   const [tableSearch, setTableSearch] = useState('');
@@ -172,6 +178,46 @@ export default function AttendancePage() {
     }
   };
 
+  const handleScan = async (rawCode: string) => {
+    // Strip invisible characters and trailing spaces
+    const scannedCode = rawCode.trim();
+
+    // Find if Sewadar is checked in first (faster than querying API)
+    const activeRecord = activeSewadars.find(a => 
+      a.sewadar?.sewadar_id === scannedCode || a.sewadar?.uuid === scannedCode
+    );
+
+    if (activeRecord) {
+      handleCheckOut(activeRecord.id);
+      return;
+    }
+
+    // Not checked in, look them up to check them in
+    setIsSearching(true);
+    try {
+      const { data } = await getSewadars({ q: scannedCode, center_id: centerFilter ? Number(centerFilter) : undefined });
+      const match = data.data?.find((s: Sewadar) => s.sewadar_id === scannedCode || s.uuid === scannedCode);
+      
+      if (match) {
+        await checkIn(match.id, match.department_id);
+        toast.success(`${match.name} Checked In`);
+        fetchAttendance();
+      } else {
+        toast.error(`Invalid Badge: Code ${scannedCode} not found in this center/dept.`);
+      }
+    } catch (err) {
+      toast.error('Scanned lookup failed');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  useHardwareScanner((code) => {
+    if (canMarkAttendance && !isEditModalOpen) {
+      handleScan(code);
+    }
+  });
+
   const handleBulkCheckOut = async () => {
     const presentRecords = attendance.filter(a => !a.check_out);
     if (presentRecords.length === 0) {
@@ -261,7 +307,7 @@ export default function AttendancePage() {
           </div>
 
           {canMarkAttendance && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1fr_200px] gap-4">
               {/* Check-in Search */}
               <div className="relative group">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 pointer-events-none">
@@ -358,6 +404,16 @@ export default function AttendancePage() {
                   </div>
                 )}
               </div>
+
+              {/* Scanner Button */}
+              <button 
+                onClick={() => setIsScannerOpen(true)}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl flex items-center justify-center gap-2 font-black uppercase tracking-widest text-xs py-3 shadow-lg transition-all active:scale-95"
+              >
+                <Camera size={18} />
+                <span className="hidden sm:block">Scan Badge</span>
+                <span className="sm:hidden">Scan</span>
+              </button>
             </div>
           )}
         </div>
@@ -687,6 +743,12 @@ export default function AttendancePage() {
             </div>
           </div>
         )}
+
+        <ScannerModal 
+          isOpen={isScannerOpen} 
+          onClose={() => setIsScannerOpen(false)} 
+          onScan={handleScan} 
+        />
       </div>
     </DashboardLayout>
   );

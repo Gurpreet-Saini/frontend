@@ -44,8 +44,8 @@ import {
 import toast from 'react-hot-toast';
 import { formatDate } from '@/lib/utils';
 import debounce from 'lodash/debounce';
-
 import { useAuth } from '@/lib/auth-context';
+import { useHardwareScanner } from '@/hooks/useHardwareScanner';
 
 export default function SewadarsPage() {
   const { isSuperAdmin, token } = useAuth();
@@ -87,6 +87,14 @@ export default function SewadarsPage() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkTransferDeptId, setBulkTransferDeptId] = useState('');
   const [showBulkTransfer, setShowBulkTransfer] = useState(false);
+
+  // Hardware Scanner Hook for quick lookup
+  useHardwareScanner((code) => {
+    if (!isModalOpen) {
+      setSearch(code.trim());
+      toast.success(`Scanned: ${code}`);
+    }
+  });
 
   useEffect(() => {
     if (isSuperAdmin && token) {
