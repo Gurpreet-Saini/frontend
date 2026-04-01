@@ -51,3 +51,21 @@ export interface DashboardStats {
   today_by_dept: { id: number; name: string; count: number }[];
   today_by_center: { id: number; name: string; count: number }[];
 }
+
+export interface User {
+  id: number;
+  username: string;
+  role: 'super_admin' | 'center_admin' | 'operator' | 'dept_viewer';
+  center_id?: number;
+  center?: Center;
+}
+
+export interface Feedback {
+  id: number;
+  user_id?: number;
+  user?: User;
+  subject: string;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}

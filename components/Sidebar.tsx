@@ -12,11 +12,13 @@ import {
   UserCog,
   LogOut, 
   LayoutDashboard,
+  MessageSquare,
   X
 } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import FeedbackModal from './FeedbackModal';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,6 +28,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout, isAdmin, isSuperAdmin, canMarkAttendance } = useAuth();
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
 
   // Close sidebar on route change (mobile)
   useEffect(() => {
@@ -39,6 +42,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     { name: 'Sewadars', href: '/sewadars', icon: Users, show: isAdmin },
     { name: 'Attendance', href: '/attendance', icon: UserCheck, show: canMarkAttendance },
     { name: 'Departments', href: '/departments', icon: Building2 },
+    { name: 'Feedback', href: '/dashboard/feedback', icon: MessageSquare, show: isSuperAdmin },
   ];
 
   return (
@@ -103,6 +107,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
 
         <div className="p-4 border-t border-gray-100 space-y-3">
+          <button 
+            onClick={() => setIsFeedbackOpen(true)}
+            className="sidebar-link w-full text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
+          >
+            <MessageSquare size={18} />
+            <span>Give Feedback</span>
+          </button>
+
           <div className="px-3 py-3.5 rounded-2xl bg-gray-50/50 border border-gray-100">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Connected as</p>
             <div className="flex items-center gap-2">
@@ -128,6 +140,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           </button>
         </div>
       </aside>
+
+      <FeedbackModal 
+        isOpen={isFeedbackOpen} 
+        onClose={() => setIsFeedbackOpen(false)} 
+      />
     </>
   );
 }

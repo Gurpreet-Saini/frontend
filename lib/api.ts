@@ -91,3 +91,15 @@ export const getUsers = () => api.get('/api/users');
 export const createUser = (data: object) => api.post('/api/users', data);
 export const updateUser = (id: number, data: object) => api.put(`/api/users/${id}`, data);
 export const deleteUser = (id: number) => api.delete(`/api/users/${id}`);
+
+// ─── Feedback ─────────────────────────────────────────────────────────────
+export const submitFeedback = (data: { subject: string; message: string }) =>
+  api.post('/api/feedback', data);
+
+export const getFeedbacks = () => api.get('/api/feedback');
+
+export const markFeedbackAsRead = (id: number) =>
+  api.put(`/api/feedback/${id}/read`);
+
+export const deleteFeedback = (id: number) =>
+  api.delete(`/api/feedback/${id}`);
