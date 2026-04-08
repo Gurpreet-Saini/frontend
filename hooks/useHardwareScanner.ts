@@ -45,8 +45,9 @@ export function useHardwareScanner(onScan: (scannedData: string) => void) {
     // If Enter doesn't arrive within this time after the first char, reset.
     const WATCHDOG_MS = 1000; // 1 second
 
-    // Minimum chars to consider a valid barcode (avoids accidental Enter press)
-    const MIN_LENGTH = 4;
+    // Minimum chars to consider a valid barcode (avoids accidental Enter press).
+    // Kept at 2 so very short barcodes/codes are captured.
+    const MIN_LENGTH = 2;
     // -------------------------------------------------------------------------
 
     const clearWatchdog = () => {
@@ -74,8 +75,8 @@ export function useHardwareScanner(onScan: (scannedData: string) => void) {
       const target  = e.target as HTMLElement;
       const inInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
 
-      // ── Enter key ──────────────────────────────────────────────────────────
-      if (e.key === 'Enter') {
+      // ── Terminator key (Enter OR Tab – both are used by different scanner brands) ──
+      if (e.key === 'Enter' || e.key === 'Tab') {
         clearWatchdog();
 
         if (isScanningRef.current && barcodeBuffer.current.length >= MIN_LENGTH) {
