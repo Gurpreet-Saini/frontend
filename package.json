@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "cron:install": "chmod +x scripts/keep_alive.sh && (crontab -l 2>/dev/null; echo \"*/5 * * * * $(pwd)/scripts/keep_alive.sh >> $(pwd)/scripts/keep_alive.log 2>&1\") | crontab -"
   },
   "dependencies": {
     "@types/lodash": "^4.17.24",

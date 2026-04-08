@@ -5,7 +5,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 export interface AuthUser {
   id: number;
   username: string;
-   role: 'super_admin' | 'center_admin' | 'operator' | 'dept_viewer';
+  role: 'super_admin' | 'center_admin' | 'operator' | 'dept_viewer';
   department_id?: number | null;
   department?: { id: number; name: string } | null;
   center_id?: number | null;
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         console.error('Backend keep-alive ping failed', err);
       }
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 10 * 60 * 1000); // 10 minutes
 
     return () => clearInterval(pingInterval);
   }, []);
