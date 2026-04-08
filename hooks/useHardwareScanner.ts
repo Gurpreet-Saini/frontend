@@ -1,83 +1,165 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Custom hook to listen for hardware barcode scanner input.
+ * Robust hardware barcode scanner hook.
  *
- * Hardware scanners act as keyboards – they type each character very rapidly
- * (typically < 50 ms apart) and finish with an 'Enter' keystroke.
+ * Hardware scanners inject keystrokes into the focused element, ending with Enter.
+ * They type each character in 5–100 ms. This hook detects that pattern.
  *
- * Key difference from human typing:
- * - A human rarely types faster than one character every 100–150 ms.
- * - A scanner fires all characters within a total burst of < 100 ms.
+ * Strategy (timeout-based, NOT speed-threshold-based for mid-scan chars):
+ *  1. First char arrives  → start accumulating, start a 1 s watchdog timer.
+ *  2. Second char arrives quickly (< 150 ms) → enter "scan mode".
+ *  3. While in scan mode, suppress chars from any focused input field.
+ *  4. Enter arrives while in scan mode with enough chars → fire onScan().
+ *  5. If Enter never arrives within 1 s → reset (it was just typing).
  *
- * This hook works even when focus is inside an <input> or <textarea> by
- * monitoring inter-keystroke timing. When a scan is detected it calls onScan
- * and suppresses the raw characters so they don't pollute the focused field.
+ * Why the old approach broke:
+ *  The old code reset the buffer whenever elapsed > 50 ms between ANY two chars.
+ *  Many scanners send chars at 60–100 ms intervals, so every character
+ *  triggered a reset and the buffer never built up enough to fire.
+ *
+ * The new approach only resets on the FIRST gap (to distinguish scan start from
+ * human typing). Once scan mode is active, we tolerate gaps up to 450 ms
+ * (3× the detection threshold) before giving up.
  */
 export function useHardwareScanner(onScan: (scannedData: string) => void) {
-  const barcodeBuffer = useRef('');
-  const lastKeyTime = useRef<number>(0);
-  // Track whether we are currently accumulating what looks like a scan
-  const isScanningRef = useRef(false);
-  // Keep latest onScan in a ref so the effect never needs to re-register
+  const barcodeBuffer  = useRef('');
+  const lastKeyTime    = useRef<number>(0);
+  const isScanningRef  = useRef(false);
+  const watchdogTimer  = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Keep latest callback in a ref – the effect registers only once
   const onScanRef = useRef(onScan);
   onScanRef.current = onScan;
 
   useEffect(() => {
-    const SCAN_SPEED_THRESHOLD_MS = 50; // scanners are faster than this per char
-    const MIN_BARCODE_LENGTH = 3;
+    // --- Tuneable constants ---------------------------------------------------
+    // Max ms between the FIRST and SECOND character to enter scan mode.
+    // 150 ms covers virtually every scanner model (fast: 5 ms, slow: ~100 ms).
+    const SCAN_DETECT_MS = 150;
+
+    // Once in scan mode, tolerate gaps up to this value before giving up.
+    // 3× SCAN_DETECT_MS keeps us resilient to occasional scanner hiccups.
+    const SCAN_CONTINUE_MS = SCAN_DETECT_MS * 3; // 450 ms
+
+    // If Enter doesn't arrive within this time after the first char, reset.
+    const WATCHDOG_MS = 1000; // 1 second
+
+    // Minimum chars to consider a valid barcode (avoids accidental Enter press)
+    const MIN_LENGTH = 4;
+    // -------------------------------------------------------------------------
+
+    const clearWatchdog = () => {
+      if (watchdogTimer.current !== null) {
+        clearTimeout(watchdogTimer.current);
+        watchdogTimer.current = null;
+      }
+    };
+
+    const resetBuffer = () => {
+      clearWatchdog();
+      barcodeBuffer.current  = '';
+      isScanningRef.current  = false;
+      lastKeyTime.current    = 0;
+    };
+
+    const startWatchdog = () => {
+      clearWatchdog();
+      watchdogTimer.current = setTimeout(resetBuffer, WATCHDOG_MS);
+    };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      const currentTime = Date.now();
-      const elapsed = currentTime - lastKeyTime.current;
+      const now     = Date.now();
+      const elapsed = now - lastKeyTime.current;
+      const target  = e.target as HTMLElement;
+      const inInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
 
-      // Decide if this keystroke is part of an ongoing scan burst
-      const target = e.target as HTMLElement;
-      const isInInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA';
-
+      // ── Enter key ──────────────────────────────────────────────────────────
       if (e.key === 'Enter') {
-        // Enter key – if our buffer has enough chars & we were in scanner mode, fire
-        if (isScanningRef.current && barcodeBuffer.current.length >= MIN_BARCODE_LENGTH) {
-          e.preventDefault(); // Don't submit any form
+        clearWatchdog();
+
+        if (isScanningRef.current && barcodeBuffer.current.length >= MIN_LENGTH) {
+          // Valid scan – fire the callback
+          e.preventDefault();
+          e.stopPropagation();
+
+          // Clear any character(s) that leaked into a focused input before
+          // scan mode was detected (i.e. the very first character).
+          if (inInput) {
+            const inp = target as HTMLInputElement;
+            if (inp.value) {
+              const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+                window.HTMLInputElement.prototype, 'value'
+              )?.set;
+              if (nativeInputValueSetter) {
+                nativeInputValueSetter.call(inp, '');
+              } else {
+                inp.value = '';
+              }
+              inp.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+          }
+
           onScanRef.current(barcodeBuffer.current.trim());
         }
-        // Always reset after Enter
-        barcodeBuffer.current = '';
-        isScanningRef.current = false;
-        lastKeyTime.current = currentTime;
+
+        resetBuffer();
         return;
       }
 
-      if (e.key.length !== 1) {
-        // Non-printable key (Shift, Ctrl, etc.) – ignore but don't reset
+      // ── Ignore non-printable keys (Shift, Ctrl, Alt …) ────────────────────
+      if (e.key.length !== 1) return;
+
+      // ── First character ever (empty buffer) ───────────────────────────────
+      if (barcodeBuffer.current.length === 0) {
+        barcodeBuffer.current = e.key;
+        lastKeyTime.current   = now;
+        startWatchdog();        // give scanner 1 s to complete
+        // Don't suppress yet – we can't tell if it's a scan or human keystroke
         return;
       }
 
-      // If too slow between chars → human typing; reset scanner accumulation
-      if (elapsed > SCAN_SPEED_THRESHOLD_MS) {
-        barcodeBuffer.current = '';
-        isScanningRef.current = false;
+      // ── Subsequent characters ─────────────────────────────────────────────
+      if (!isScanningRef.current) {
+        // Still deciding: is this a scanner or a human?
+        if (elapsed <= SCAN_DETECT_MS) {
+          // Second char arrived quickly → it's a scanner
+          isScanningRef.current = true;
+        } else {
+          // Too slow → human typed the first char, start fresh with this one
+          barcodeBuffer.current = e.key;
+          lastKeyTime.current   = now;
+          startWatchdog();
+          return;
+        }
+      } else {
+        // Already in scan mode – tolerate small gaps (scanner hiccup / USB lag)
+        if (elapsed > SCAN_CONTINUE_MS) {
+          // Gap too long even for a slow scanner → abandon and start fresh
+          barcodeBuffer.current = e.key;
+          isScanningRef.current = false;
+          lastKeyTime.current   = now;
+          startWatchdog();
+          return;
+        }
       }
 
-      // Mark as potentially scanning once we see rapid consecutive characters
-      if (!isScanningRef.current && elapsed <= SCAN_SPEED_THRESHOLD_MS && barcodeBuffer.current.length > 0) {
-        isScanningRef.current = true;
-      }
-
+      // Accumulate character
       barcodeBuffer.current += e.key;
+      lastKeyTime.current    = now;
+      startWatchdog(); // refresh the watchdog on every char
 
-      // If we believe a scan is in progress inside an input, suppress the keystroke
-      // so raw barcode chars don't appear in the search field.
-      if (isScanningRef.current && isInInput) {
+      // Suppress keystrokes from the focused input while scanning
+      if (isScanningRef.current && inInput) {
         e.preventDefault();
+        e.stopPropagation();
       }
-
-      lastKeyTime.current = currentTime;
     };
 
     window.addEventListener('keydown', handleKeyDown, true); // capture phase
     return () => {
       window.removeEventListener('keydown', handleKeyDown, true);
+      clearWatchdog();
     };
-  }, []); // stable – uses refs, no deps needed
+  }, []); // stable – all state lives in refs
 }
