@@ -43,6 +43,7 @@ export const login = (username: string, password: string) =>
   api.post('/auth/login', { username, password });
 
 export const getMe = () => api.get('/api/me');
+export const pingHealth = () => api.get('/health');
 
 // ─── Departments ──────────────────────────────────────────────────────────
 export const getDepartments = (params?: object) => api.get('/api/departments', { params });

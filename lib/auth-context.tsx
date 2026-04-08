@@ -38,6 +38,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(JSON.parse(u));
       }
     }
+
+    // Keep-alive ping every 5 minutes
+    const pingInterval = setInterval(async () => {
+      try {
+        const { pingHealth } = await import('@/lib/api');
+        await pingHealth();
+        console.log('Backend keep-alive ping successful');
+      } catch (err) {
+        console.error('Backend keep-alive ping failed', err);
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearInterval(pingInterval);
   }, []);
 
   const login = (token: string, user: AuthUser) => {
