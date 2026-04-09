@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configuration: Update this URL if you deploy to production
-BACKEND_URL="http://localhost:8080"
+BACKEND_URL="https://backend-1-q4lq.onrender.com"
 HEALTH_ENDPOINT="/health"
 
 echo "Ping started at $(date)"
