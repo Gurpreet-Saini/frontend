@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         console.error('Backend keep-alive ping failed', err);
       }
-    }, 5 * 60 * 1000); // 5 minutes
+    }, 4 * 60 * 1000); // 5 minutes
 
     return () => clearInterval(pingInterval);
   }, []);
