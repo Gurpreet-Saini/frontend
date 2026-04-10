@@ -50,6 +50,7 @@ export interface DashboardStats {
   today_attendance: number;
   today_by_dept: { id: number; name: string; count: number }[];
   today_by_center: { id: number; name: string; count: number }[];
+  historical_trend: { period: string; count: number }[];
 }
 
 export interface User {
